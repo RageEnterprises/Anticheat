@@ -1,0 +1,43 @@
+# RageAnticheat configuration. Apply changes with /rageanticheat reload.
+# Distances are in blocks per tick (20 ticks = 1 second). Multiply by 20 for blocks per second.
+
+checks:
+  flight:
+    enabled: true
+    # Moves in a row without ground contact before the airtime rule applies (40 = about 2 seconds).
+    max-airborne-ticks: 40
+    # After max-airborne-ticks, the player must be falling at least this fast or they are flagged.
+    min-fall-speed: 0.5
+    # How much higher than vanilla gravity predicts a player may move per tick. Raise if laggy players get flagged.
+    gravity-tolerance: 0.05
+
+  speed:
+    enabled: true
+    # Moves averaged together. Larger values tolerate lag spikes better but react slower.
+    samples: 10
+    # Maximum average horizontal distance per tick. These include room for jumping.
+    max:
+      walk: 0.30
+      sprint: 0.45
+      sneak: 0.20
+      swim: 0.35
+    # Each Speed effect level raises the limit by this fraction (0.20 = +20% per level, like vanilla).
+    speed-potion-bonus: 0.20
+
+grace:
+  # Ticks to skip both checks after knockback, damage, or server-applied velocity.
+  knockback-ticks: 30
+  # Ticks to keep skipping a check after leaving a state that breaks it: elytra, riptide, vehicles,
+  # flying, water, ladders, levitation, slow falling, ice, soul speed, slime blocks and beds.
+  boost-ticks: 20
+
+violations:
+  # Kick when a player's violation level reaches this.
+  kick-threshold: 20
+  kick-enabled: true
+  # Violation level removed every second.
+  decay-per-second: 0.5
+
+alerts:
+  # Send alerts to online players with rageanticheat.alerts. Violations are always logged to the console.
+  enabled: true

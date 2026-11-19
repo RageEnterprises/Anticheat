@@ -1,0 +1,21 @@
+name: RageAnticheat
+version: ${version}
+main: dev.rage.anticheat.RageAnticheat
+api-version: '1.20'
+description: Lightweight flight and speed checks.
+
+commands:
+  rageanticheat:
+    description: Manage RageAnticheat.
+    usage: /rageanticheat <reload|status|reset <player>>
+
+permissions:
+  rageanticheat.admin:
+    description: Use /rageanticheat.
+    default: op
+  rageanticheat.alerts:
+    description: Receive violation alerts in chat.
+    default: op
+  rageanticheat.bypass:
+    description: Skip all movement checks.
+    default: false

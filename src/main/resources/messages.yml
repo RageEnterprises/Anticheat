@@ -1,0 +1,20 @@
+# RageAnticheat messages, in MiniMessage format: https://docs.advntr.dev/minimessage/format
+# Placeholders: {player}, {check}, {count}.
+#
+# Every message is placed into "format" at {message}. Change the colors here to retheme the plugin.
+format: "<dark_red><bold>RAGE → </bold></dark_red><red>{message}</red>"
+
+kick: "Kicked for repeated movement violations."
+alert: "{player} failed {check} ({count} violations)."
+
+# A literal < must be written as \< so MiniMessage does not read it as a tag.
+usage: 'Usage: /rageanticheat \<reload|status|reset \<player>>'
+no-permission: "You do not have permission to do that."
+reload: "Configuration and messages reloaded."
+reset: "Reset violations for {player}."
+player-not-found: "{player} is not online."
+
+status-enabled: "{check} check: enabled"
+status-disabled: "{check} check: disabled"
+status-player: "{player}: {count} violations"
+status-none: "No players have active violations."
