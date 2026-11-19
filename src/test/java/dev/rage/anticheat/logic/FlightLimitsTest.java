@@ -1,5 +1,6 @@
 package dev.rage.anticheat.logic;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -46,6 +47,13 @@ class FlightLimitsTest {
     void airtimeAboveThresholdWithoutFallingIsFlagged() {
         assertTrue(limits.exceedsAirtime(41, 0));
         assertTrue(limits.exceedsAirtime(41, -0.2));
+    }
+
+    @Test
+    void stepAllowsVanillaStepOrJumpButNotMore() {
+        assertEquals(0.6, FlightLimits.maxGroundRise(0.6, 0), 1e-9);
+        assertEquals(0.72, FlightLimits.maxGroundRise(0.6, 3), 1e-9);
+        assertTrue(1.0 > FlightLimits.maxGroundRise(0.6, 0), "a 1-block step is a cheat");
     }
 
     @Test

@@ -55,9 +55,10 @@ final class RageCommand implements TabExecutor {
     }
 
     private void status(CommandSender sender, Messages messages) {
-        Settings s = plugin.settings();
-        sender.sendMessage(messages.get(s.flightEnabled() ? "status-enabled" : "status-disabled", null, "Flight", -1));
-        sender.sendMessage(messages.get(s.speedEnabled() ? "status-enabled" : "status-disabled", null, "Speed", -1));
+        for (Map.Entry<String, Boolean> check : plugin.settings().checks().entrySet()) {
+            String key = check.getValue() ? "status-enabled" : "status-disabled";
+            sender.sendMessage(messages.get(key, null, check.getKey(), -1));
+        }
         boolean any = false;
         for (Map.Entry<UUID, PlayerData> entry : plugin.players().entrySet()) {
             int count = entry.getValue().violations.count();

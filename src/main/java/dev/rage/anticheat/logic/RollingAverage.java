@@ -22,28 +22,20 @@ public final class RollingAverage {
         }
     }
 
-    /** True once the window holds {@code size} samples. Checks should wait for this. */
     public boolean isFull() {
         return count == samples.length;
     }
 
-    public double average() {
-        if (count == 0) {
-            return 0;
-        }
+    public double sum() {
         double sum = 0;
         for (int i = 0; i < count; i++) {
             sum += samples[i];
         }
-        return sum / count;
+        return sum;
     }
 
-    public double max() {
-        double max = 0;
-        for (int i = 0; i < count; i++) {
-            max = Math.max(max, samples[i]);
-        }
-        return max;
+    public double average() {
+        return count == 0 ? 0 : sum() / count;
     }
 
     public void clear() {

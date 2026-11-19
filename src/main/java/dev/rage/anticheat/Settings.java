@@ -1,16 +1,30 @@
 package dev.rage.anticheat;
 
 import dev.rage.anticheat.logic.FlightLimits;
-import dev.rage.anticheat.logic.SpeedLimits;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import org.bukkit.configuration.ConfigurationSection;
 
 /** Immutable snapshot of config.yml. Rebuilt on /rageanticheat reload. */
 record Settings(
         boolean flightEnabled,
+        boolean spiderEnabled,
         FlightLimits flight,
         boolean speedEnabled,
         int speedSamples,
-        SpeedLimits speed,
+        double speedTolerance,
+        double speedMaxExcess,
+        boolean jesusEnabled,
+        int jesusMaxTicks,
+        boolean stepEnabled,
+        double stepMaxHeight,
+        boolean noFallEnabled,
+        int noFallMaxTicks,
+        boolean timerEnabled,
+        double timerMaxAheadMs,
+        double timerMaxCreditMs,
+        boolean reachEnabled,
+        double reachMaxDistance,
         int knockbackGraceTicks,
         int boostGraceTicks,
         double kickThreshold,
@@ -21,23 +35,45 @@ record Settings(
     static Settings from(ConfigurationSection c) {
         return new Settings(
                 c.getBoolean("checks.flight.enabled", true),
+                c.getBoolean("checks.spider.enabled", true),
                 new FlightLimits(
                         Math.max(1, c.getInt("checks.flight.max-airborne-ticks", 40)),
                         Math.max(0, c.getDouble("checks.flight.min-fall-speed", 0.5)),
                         Math.max(0, c.getDouble("checks.flight.gravity-tolerance", 0.05))),
                 c.getBoolean("checks.speed.enabled", true),
                 Math.max(1, c.getInt("checks.speed.samples", 10)),
-                new SpeedLimits(
-                        c.getDouble("checks.speed.max.walk", 0.30),
-                        c.getDouble("checks.speed.max.sprint", 0.45),
-                        c.getDouble("checks.speed.max.sneak", 0.20),
-                        c.getDouble("checks.speed.max.swim", 0.35),
-                        Math.max(0, c.getDouble("checks.speed.speed-potion-bonus", 0.20))),
+                Math.max(0, c.getDouble("checks.speed.tolerance", 0.01)),
+                Math.max(0, c.getDouble("checks.speed.max-excess", 0.1)),
+                c.getBoolean("checks.jesus.enabled", true),
+                Math.max(1, c.getInt("checks.jesus.max-ticks", 10)),
+                c.getBoolean("checks.step.enabled", true),
+                Math.max(0, c.getDouble("checks.step.max-height", 0.6)),
+                c.getBoolean("checks.nofall.enabled", true),
+                Math.max(1, c.getInt("checks.nofall.max-ticks", 3)),
+                c.getBoolean("checks.timer.enabled", true),
+                Math.max(50, c.getDouble("checks.timer.max-ahead-ms", 300)),
+                Math.max(0, c.getDouble("checks.timer.max-lag-credit-ms", 1000)),
+                c.getBoolean("checks.reach.enabled", true),
+                Math.max(0, c.getDouble("checks.reach.max-distance", 3.5)),
                 Math.max(0, c.getInt("grace.knockback-ticks", 30)),
                 Math.max(0, c.getInt("grace.boost-ticks", 20)),
                 Math.max(1, c.getDouble("violations.kick-threshold", 20)),
                 Math.max(0, c.getDouble("violations.decay-per-second", 0.5)),
                 c.getBoolean("violations.kick-enabled", true),
                 c.getBoolean("alerts.enabled", true));
+    }
+
+    /** Check name to enabled state, in display order. */
+    Map<String, Boolean> checks() {
+        Map<String, Boolean> checks = new LinkedHashMap<>();
+        checks.put("Flight", flightEnabled);
+        checks.put("Spider", spiderEnabled);
+        checks.put("Speed", speedEnabled);
+        checks.put("Jesus", jesusEnabled);
+        checks.put("Step", stepEnabled);
+        checks.put("NoFall", noFallEnabled);
+        checks.put("Timer", timerEnabled);
+        checks.put("Reach", reachEnabled);
+        return checks;
     }
 }

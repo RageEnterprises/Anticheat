@@ -17,11 +17,27 @@ public final class RageAnticheat extends JavaPlugin {
     private final Messages messages = new Messages();
     private Settings settings;
 
+    private static final long LAG_TICK_NANOS = 100_000_000L;
+    private static final long LAG_RECOVERY_NANOS = 2_000_000_000L;
+    private long lastTickNanos;
+    private long lastLagNanos = Long.MIN_VALUE / 2;
+
     @Override
     public void onEnable() {
         saveDefaultConfig();
         reload();
         getServer().getPluginManager().registerEvents(new MovementListener(this), this);
+        getServer().getPluginManager().registerEvents(new CombatListener(this), this);
+
+        // Server lag detection for the Timer check: a slow tick delivers queued packets in a burst.
+        lastTickNanos = System.nanoTime();
+        getServer().getScheduler().runTaskTimer(this, () -> {
+            long now = System.nanoTime();
+            if (now - lastTickNanos > LAG_TICK_NANOS) {
+                lastLagNanos = now;
+            }
+            lastTickNanos = now;
+        }, 1L, 1L);
 
         PluginCommand command = getCommand("rageanticheat");
         if (command != null) {
@@ -58,6 +74,11 @@ public final class RageAnticheat extends JavaPlugin {
 
     Messages messages() {
         return messages;
+    }
+
+    /** True while the current tick runs long, or within 2 seconds after a slow tick. */
+    boolean serverLagging(long nowNanos) {
+        return nowNanos - lastTickNanos > LAG_TICK_NANOS || nowNanos - lastLagNanos < LAG_RECOVERY_NANOS;
     }
 
     Map<UUID, PlayerData> players() {

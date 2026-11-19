@@ -17,6 +17,7 @@ class RollingAverageTest {
         avg.add(3);
         assertFalse(avg.isFull());
         assertEquals(2, avg.average(), 1e-9);
+        assertEquals(4, avg.sum(), 1e-9);
     }
 
     @Test
@@ -26,20 +27,10 @@ class RollingAverageTest {
         avg.add(1);
         avg.add(1);
         assertTrue(avg.isFull());
-        assertEquals(11.0 / 3, avg.average(), 1e-9);
+        assertEquals(11, avg.sum(), 1e-9);
         avg.add(1); // pushes out the 9
+        assertEquals(3, avg.sum(), 1e-9);
         assertEquals(1, avg.average(), 1e-9);
-        assertEquals(1, avg.max(), 1e-9);
-    }
-
-    @Test
-    void singleLagSpikeIsSmoothedOut() {
-        RollingAverage avg = new RollingAverage(10);
-        for (int i = 0; i < 9; i++) {
-            avg.add(0.28); // normal sprinting
-        }
-        avg.add(0.9); // one bundled packet after a lag spike
-        assertTrue(avg.average() < 0.45, "spike should stay under the sprint limit");
     }
 
     @Test
@@ -49,8 +40,7 @@ class RollingAverageTest {
         avg.add(5);
         avg.clear();
         assertFalse(avg.isFull());
-        assertEquals(0, avg.average());
-        assertEquals(0, avg.max());
+        assertEquals(0, avg.sum());
     }
 
     @Test

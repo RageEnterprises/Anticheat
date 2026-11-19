@@ -18,6 +18,11 @@ public record FlightLimits(int maxAirborneTicks, double minFallSpeed, double gra
         return JUMP_VELOCITY + JUMP_BOOST_PER_LEVEL * jumpBoostLevel;
     }
 
+    /** Highest rise in one move from ground to ground: a step-up or a jump, whichever is higher. */
+    public static double maxGroundRise(double stepHeight, int jumpBoostLevel) {
+        return Math.max(stepHeight, jumpVelocity(jumpBoostLevel));
+    }
+
     /**
      * True when the player rose or fell slower than gravity allows.
      *

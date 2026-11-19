@@ -1,5 +1,5 @@
 # RageAnticheat configuration. Apply changes with /rageanticheat reload.
-# Distances are in blocks per tick (20 ticks = 1 second). Multiply by 20 for blocks per second.
+# Distances are in blocks per move. A vanilla client sends one move per tick (20 per second).
 
 checks:
   flight:
@@ -11,24 +11,55 @@ checks:
     # How much higher than vanilla gravity predicts a player may move per tick. Raise if laggy players get flagged.
     gravity-tolerance: 0.05
 
+  spider:
+    # Climbing a wall without a ladder or vine. Uses the flight gravity settings above.
+    enabled: true
+
   speed:
     enabled: true
-    # Moves averaged together. Larger values tolerate lag spikes better but react slower.
+    # Free extra distance per move on top of the vanilla prediction. Keep this small: it is added every move.
+    tolerance: 0.01
+    # Flag when the extra distance over the last <samples> moves adds up to more than this many blocks.
+    max-excess: 0.1
     samples: 10
-    # Maximum average horizontal distance per tick. These include room for jumping.
-    max:
-      walk: 0.30
-      sprint: 0.45
-      sneak: 0.20
-      swim: 0.35
-    # Each Speed effect level raises the limit by this fraction (0.20 = +20% per level, like vanilla).
-    speed-potion-bonus: 0.20
+
+  jesus:
+    # Walking on water or lava.
+    enabled: true
+    # Moves in a row level on a liquid surface before flagging.
+    max-ticks: 10
+
+  step:
+    # Stepping up higher than vanilla allows in a single move.
+    enabled: true
+    # Vanilla step height. Raise if another plugin changes the step_height attribute.
+    max-height: 0.6
+
+  nofall:
+    # Client claims to be on the ground while falling, to avoid fall damage.
+    enabled: true
+    # Moves in a row before flagging.
+    max-ticks: 3
+
+  timer:
+    # Game sped up: more movement packets than real time allows.
+    enabled: true
+    # Flag when a client runs this many milliseconds ahead of real time.
+    max-ahead-ms: 300
+    # Idle or lagged time a client may bank to absorb a burst of delayed packets. Lower is stricter.
+    max-lag-credit-ms: 1000
+
+  reach:
+    # Melee hits from farther away than vanilla allows. Flagged hits are cancelled.
+    enabled: true
+    # Eye-to-hitbox distance. Vanilla is 3.0; the extra covers ping. Raise for high-ping players.
+    max-distance: 3.5
 
 grace:
-  # Ticks to skip both checks after knockback, damage, or server-applied velocity.
+  # Ticks to skip all movement checks after knockback, damage, explosions, or server-applied velocity.
   knockback-ticks: 30
-  # Ticks to keep skipping a check after leaving a state that breaks it: elytra, riptide, vehicles,
-  # flying, water, ladders, levitation, slow falling, ice, soul speed, slime blocks and beds.
+  # Ticks to keep skipping checks after a state that breaks them ends: elytra, riptide, vehicles and flying
+  # (all checks); water, ladders, levitation, slow falling, slime blocks and beds (vertical checks).
   boost-ticks: 20
 
 violations:

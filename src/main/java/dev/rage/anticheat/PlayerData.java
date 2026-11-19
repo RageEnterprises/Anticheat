@@ -1,6 +1,7 @@
 package dev.rage.anticheat;
 
-import dev.rage.anticheat.logic.RollingAverage;
+import dev.rage.anticheat.logic.SpeedTracker;
+import dev.rage.anticheat.logic.TimerBalance;
 import dev.rage.anticheat.logic.ViolationCounter;
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -10,16 +11,22 @@ import org.bukkit.util.BoundingBox;
 final class PlayerData {
 
     final ViolationCounter violations = new ViolationCounter();
-    final RollingAverage distances;
-    final RollingAverage limits;
-    /** Scratch box reused by the ground check so the hot path does not allocate one. */
+    final SpeedTracker speed;
+    final TimerBalance timer = new TimerBalance();
+    /** Scratch box reused by collision tests so the hot path does not allocate one. */
     final BoundingBox scratch = new BoundingBox();
 
     double lastDy;
     boolean wasGrounded = true;
+    double lastMovementSpeed;
+    int lastMoveTick;
     int airborneTicks;
+    int jesusTicks;
+    int noFallTicks;
+    /** Server tick until which every movement check is skipped (knockback, elytra, vehicles, ...). */
+    int exemptUntil;
+    /** Server tick until which the vertical checks are skipped (water, ladders, levitation, bounces). */
     int flightGraceUntil;
-    int speedGraceUntil;
 
     private World safeWorld;
     private double safeX;
@@ -27,8 +34,7 @@ final class PlayerData {
     private double safeZ;
 
     PlayerData(int speedSamples) {
-        distances = new RollingAverage(speedSamples);
-        limits = new RollingAverage(speedSamples);
+        speed = new SpeedTracker(speedSamples);
     }
 
     void setSafe(Location loc) {
@@ -46,12 +52,13 @@ final class PlayerData {
         return new Location(safeWorld, safeX, safeY, safeZ, current.getYaw(), current.getPitch());
     }
 
-    /** Forget movement history, e.g. after a teleport or setback. Violations are kept. */
+    /** Forget movement history, e.g. after a teleport or setback. Violations and timer balance are kept. */
     void resetMovement() {
         lastDy = 0;
         wasGrounded = true;
         airborneTicks = 0;
-        distances.clear();
-        limits.clear();
+        jesusTicks = 0;
+        noFallTicks = 0;
+        speed.reset();
     }
 }
