@@ -52,6 +52,20 @@ One plugin catches movement, combat, block and inventory cheats, blocks crash ex
 | **InvalidRotation** | Pitch beyond straight up or down, sent by silent-aim and spin cheats | Violation |
 | **NoSwing** | Attacking without the arm swing packet that every vanilla attack sends | Violation |
 | **ImpossibleSprint** | Starting to sprint with 6 food or less, or while blind | Sprint cancelled |
+| **ElytraFly** | Gliding without a boost faster, higher or longer than an elytra allows, or hovering | Gliding stopped |
+| **BoatFly** | A boat hanging in the air without falling | Dismount, vehicle moved back |
+| **EntitySpeed** | Boats and horses moving faster than they can | Dismount, vehicle moved back |
+| **Velocity** | Taking less knockback than the server gave (anti-knockback) | Violation |
+| **Phase** | Moving into solid blocks | Setback |
+| **AirPlace** | Placing a block against air | Place cancelled |
+| **Tower** | Stacking blocks under yourself faster than jumping allows | Place cancelled |
+| **Criticals** | Critical hits from a faked fall while standing on the ground | Hit cancelled |
+| **ChestStealer** | Taking items from a chest faster than a person reacts to it opening | Click cancelled |
+| **AutoArmor** | Putting on armor pieces faster than a person can click | Click cancelled |
+| **InventoryMove** | Using the inventory while walking or sprinting | Click cancelled |
+| **AutoFish** | Reeling in right after every bite | Catch cancelled |
+| **Blink** | Holding movement back and sending it all at once | Setback |
+| **Aim** / **Bot** | Camera turns that are not whole mouse steps: aimbots in combat, bots such as Baritone elsewhere | Staff alert (or violation) |
 
 Each violation:
 
@@ -182,6 +196,8 @@ anti-bot:
 - **AutoClicker flags fast legitimate clickers:** lower `min-deviation-ms` or raise `max-cps`.
 - **FastBreak flags players with unstable ping:** lower `min-ratio` toward 0.7.
 - **AutoTotem flags quick players:** lower `min-reaction-ms`.
+- **Velocity flags players on bad connections:** raise `fails-to-flag` or lower `min-ratio`.
+- **Aim alerts for a player who uses cinematic camera or zoom:** that is expected; leave `punish` off.
 - **Xray alerts on legitimate miners:** raise `min-ores` or `max-ores-per-stone`. Paper's own anti-xray (`paper-world-defaults.yml → anticheat.anti-xray`) is still the best way to stop X-ray itself.
 - **Too many kicks:** raise `kick-threshold` or `decay-per-second`.
 
@@ -232,6 +248,17 @@ The player is flagged once the excess over a rolling window of moves adds up pas
 - **Step:** a move from ground to ground that rises more than `max-height`, or a jump's height if that is higher.
 - **NoFall:** the client claims to be on the ground while the server finds no block or boat under a falling player.
 - **Timer:** a balance of movement packets against real time. Idle time and lag are banked as credit, and the check resets while the server itself lags.
+- **Blink:** a Timer burst within 2 seconds of the client going silent for half a second. Blink cheats hold moves back and then release them together.
+- **Phase:** a move into solid block collision from outside it, tested with a box slightly smaller than the player. Paper already refuses most such moves itself; this flags the rest.
+
+</details>
+
+<details>
+<summary><b>ElytraFly, BoatFly, EntitySpeed and Velocity</b></summary>
+
+- **ElytraFly:** gliding only trades height for speed and back, and drag takes energy away. Without a firework, knockback, riptide or levitation, height plus the height the glider's speed could buy (`v² / 2g`) cannot rise more than `climb-margin` above its peak. Gliding faster than `max-speed` without a boost also flags, and so does a glider that holds still for a second.
+- **BoatFly and EntitySpeed:** each vehicle move is measured per tick. Boats are limited to `max-boat-speed`, or `max-boat-ice-speed` on ice. Horses are limited to their speed attribute times `mount-speed-factor`. A boat that neither rests on a block or liquid nor falls for `max-boat-air-moves` moves flags BoatFly.
+- **Velocity:** after knockback, the player's longest run of movement along it is measured until their ping plus 6 ticks have passed. Less than `min-ratio` of the expected distance, `fails-to-flag` times in a row, flags. Players next to walls, in liquid, cobwebs, vehicles or gliding are skipped.
 
 </details>
 
@@ -243,6 +270,10 @@ The player is flagged once the excess over a rolling window of moves adds up pas
 - **AutoClicker:** the server handles packets between ticks, so arm swings arrive with real-time precision. Swings aimed at a block (mining, placing) and swings from dropping items are ignored. More than `max-cps` clicks per second flags, and so does a streak of `samples` clicks whose spacing varies by less than `min-deviation-ms`.
 - **CrystalAura:** a crystal's spawn packet goes out on the tick after it is placed and takes half the ping to reach the client. A hit on a crystal younger than that is aimed at a predicted entity ID, which only cheats do. Crystal places and breaks per second are limited, and crystal hits get the KillAura crosshair test.
 - **InvalidRotation, NoSwing, ImpossibleSprint:** packets the vanilla client cannot send. Its pitch is kept between -90 and 90 degrees, every attack comes with a swing packet in the same tick, and it does not start sprinting while hungry or blind. Food and effect changes get a second plus the ping of grace, because the client learns about them late.
+- **Criticals:** a hit while the client claims to be falling, but the server finds the ground under the player and they have not jumped in the last 15 ticks. Cheats fake the fall with hops too small for the server to see as moves. Stepping off a slab does the same now and then, so only a streak flags.
+- **Aim and Bot:** mouse input turns the camera in whole steps of the sensitivity, at least 0.0096° at the lowest setting. Each player's last `samples` pitch changes are checked for such a step. Computed rotations have none, and are reported as Aim within 3 seconds of an attack and as Bot otherwise.
+- **ChestStealer, AutoArmor and InventoryMove:** ChestStealer times the first click after a chest opens, minus the ping. AutoArmor flags three armor pieces put on less than `min-interval-ms` apart. InventoryMove flags two inventory clicks within a second while walking or sprinting on normal ground; the vanilla client lets go of the movement keys when a screen opens.
+- **AutoFish:** the time from a fish biting to the reel-in, minus the ping, `streak` catches in a row.
 - **AutoTotem:** when a totem pops, the time until the click that moves the next totem into the off hand, minus the ping, is the player's reaction time. Each inventory click event is one click packet, so this works without ProtocolLib.
 
 </details>
@@ -251,6 +282,8 @@ The player is flagged once the excess over a rolling window of moves adds up pas
 <summary><b>Nuker, Scaffold and Xray</b></summary>
 
 - **FastBreak:** the time between the client's "start mining" and "finished" packets is compared with the time the block takes with the player's tool, enchantments and effects. Vanilla servers accept 70%, which FastBreak cheats use; the default limit is 80%.
+- **AirPlace:** every vanilla placement clicks the face of an existing block, so a placement against air is cancelled.
+- **Tower:** blocks stacked one above the other under the player, more than `max-per-second`. Jumping and placing manages about 2.5 a second.
 - **Nuker:** more blocks per tick or per second than instamining allows, blocks beyond reach, or blocks more than `max-angle` away from the crosshair.
 - **Scaffold:** each placement ray-traces the player's view. The block they clicked must be the block and face they are looking at, and repeated mismatches flag. Too many placements per second also flag.
 - **Xray:** counts "hidden" ores, meaning ores with no air or liquid touching them, against stone mined. Only the first ore of a vein counts. A ratio far above normal mining alerts staff.
@@ -296,14 +329,16 @@ No anti-cheat is perfect. These are the cases we know about:
 - **Vanilla bans:** `/ban` overrides the vanilla command. Bans made with `minecraft:ban` or from before installing are not in RageAnticheat's database.
 - **Single server:** storage is SQLite on one server. It is not shared across a BungeeCord or Velocity network.
 - **Client mod detection only sees what clients send:** a cheat client that fakes a vanilla brand and registers no channels at all looks vanilla. Freecam runs entirely on the client and leaves no trace the server can see; Paper's anti-xray and entity tracking limit what it reveals.
-- **AutoClicker and AutoTotem need real-time packets:** under heavy server lag they reset rather than judge.
+- **AutoClicker and the reaction-time checks need real-time packets:** under heavy server lag they reset rather than judge.
+- **No packet library:** RageAnticheat uses only Paper's events. Checks that need raw packets, such as ping-spoof detection and transaction-based knockback timing, are not possible without one. Faking a high ping cannot get around the reaction-time checks: the ping is subtracted, so a higher one only makes the reaction look faster.
+- **Aim and Bot are hints:** cinematic camera and zoom mods also smooth the camera, so they only alert staff by default. Bots that imitate mouse steps are not caught.
+- **Cheats with a random delay:** AutoFish, ChestStealer and AutoArmor cheats set to wait longer than the limits look like a fast player.
 - **Hovering in place:** a player hovering without moving sends no movement packets, so they are caught on their next move.
 
 ## Roadmap
 
 - [ ] MySQL/MariaDB storage for networks
-- [ ] Velocity (anti-knockback)
-- [ ] InventoryMove and AutoArmor
+- [ ] Optional PacketEvents support for packet-level checks
 - [ ] IP bans and IP mutes
 - [ ] In-game GUI for profiles and history
 
@@ -339,12 +374,16 @@ Bug reports, false-positive reports and pull requests are all welcome.
 src/main/java/dev/rage/anticheat/
   RageAnticheat.java       plugin entry point, wiring, violations, Discord routing
   api/                     public addon API: Check, RageAnticheatApi, PlayerFlagEvent
-  MovementListener.java    Flight, Spider, Speed, NoSlow, Jesus, Step, NoFall, Timer
-  CombatListener.java      Reach, KillAura, CrystalAura, AutoClicker
-  BlockListener.java       Nuker, FastBreak, Scaffold, Xray
-  InventoryListener.java   AutoTotem
+  MovementListener.java    Flight, Spider, Speed, NoSlow, Jesus, Step, NoFall, Timer, Blink, Phase
+  CombatListener.java      Reach, KillAura, CrystalAura, AutoClicker, Criticals
+  BlockListener.java       Nuker, FastBreak, AirPlace, Tower, Scaffold, Xray
+  InventoryListener.java   AutoTotem, ChestStealer, AutoArmor, InventoryMove
   ClientListener.java      blocked client mods (brand and channels), brand spoofing
   PacketListener.java      InvalidRotation, NoSwing, ImpossibleSprint
+  TravelListener.java      ElytraFly, BoatFly, EntitySpeed
+  VelocityListener.java    Velocity (anti-knockback)
+  AimListener.java         Aim and Bot
+  FishListener.java        AutoFish
   ExploitListener.java     book, item NBT and sign crash exploits
   RageCommand.java         /rageanticheat
   Settings.java            config.yml snapshot for the checks

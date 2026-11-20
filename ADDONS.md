@@ -19,7 +19,7 @@ repositories {
 
 dependencies {
     compileOnly("io.papermc.paper:paper-api:1.20.4-R0.1-SNAPSHOT")
-    compileOnly("com.github.RageEnterprises:Anticheat:v2.2.0") // a release tag, or main-SNAPSHOT
+    compileOnly("com.github.RageEnterprises:Anticheat:v2.3.0") // a release tag, or main-SNAPSHOT
 }
 ```
 
