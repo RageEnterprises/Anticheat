@@ -28,6 +28,11 @@ final class PacketListener implements Listener {
     /** Time beyond the ping for the client to learn about a food or effect change. */
     private static final long SPRINT_GRACE_NANOS = 1_000_000_000L;
     private static final int MIN_SPRINT_FOOD = 7;
+    /**
+     * Cheats can fake a high ping by answering keep-alives late. Ping only ever widens the grace
+     * here, so it is capped: a faked ping cannot buy more than this.
+     */
+    private static final long MAX_GRACE_PING_MS = 300;
 
     private final RageAnticheat plugin;
 
@@ -120,7 +125,8 @@ final class PacketListener implements Listener {
         }
         PlayerData d = plugin.data(player);
         long now = System.nanoTime();
-        if (now - d.sprintStateNanos < SPRINT_GRACE_NANOS + player.getPing() * 1_000_000L || plugin.serverLagging(now)) {
+        long ping = Math.min(player.getPing(), MAX_GRACE_PING_MS);
+        if (now - d.sprintStateNanos < SPRINT_GRACE_NANOS + ping * 1_000_000L || plugin.serverLagging(now)) {
             return;
         }
         event.setCancelled(true);
