@@ -1,5 +1,6 @@
 package dev.rage.anticheat;
 
+import dev.rage.anticheat.logic.ClickStats;
 import dev.rage.anticheat.logic.EventWindow;
 import dev.rage.anticheat.logic.SpeedTracker;
 import dev.rage.anticheat.logic.TargetTracker;
@@ -49,7 +50,12 @@ final class PlayerData {
         placeMisses = new EventWindow(s.scaffold().maxMisses() + 1);
         attackMisses = new EventWindow(s.killAura().maxMisses() + 1);
         attackTargets = new TargetTracker(s.killAura().maxTargets() + 1);
+        clicks = new ClickStats(Math.max(s.autoClicker().samples(), s.autoClicker().maxCps()) + 2);
     }
+
+    /** Recent arm swings that did not hit a block, for AutoClicker. */
+    final ClickStats clicks;
+    long lastDropNanos = Long.MIN_VALUE / 2;
 
     /** Hits outside the crosshair, and recent attack targets, for KillAura. */
     final EventWindow attackMisses;

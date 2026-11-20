@@ -39,7 +39,19 @@ record Settings(
         Nuker nuker,
         Scaffold scaffold,
         KillAura killAura,
-        Xray xray) {
+        Xray xray,
+        AutoClicker autoClicker) {
+
+    /** Clicking faster than people can, or at a machine-like even rhythm. */
+    record AutoClicker(boolean enabled, int maxCps, int samples, double minDeviationMs, int minCps) {
+        static AutoClicker from(ConfigurationSection c) {
+            return new AutoClicker(c.getBoolean("enabled", true),
+                    Math.max(1, c.getInt("max-cps", 25)),
+                    Math.max(5, c.getInt("samples", 20)),
+                    Math.max(0, c.getDouble("min-deviation-ms", 10)),
+                    Math.max(1, c.getInt("min-cps", 8)));
+        }
+    }
 
     /** Breaking too many blocks, too far away, or outside the player's view. */
     record Nuker(boolean enabled, int maxPerTick, int maxPerSecond, double maxDistance, double maxAngle) {
@@ -138,7 +150,8 @@ record Settings(
                 Nuker.from(section(c, "checks.nuker")),
                 Scaffold.from(section(c, "checks.scaffold")),
                 KillAura.from(section(c, "checks.killaura")),
-                Xray.from(section(c, "checks.xray"), logger));
+                Xray.from(section(c, "checks.xray"), logger),
+                AutoClicker.from(section(c, "checks.autoclicker")));
     }
 
     /** Check name to enabled state, in display order. */
@@ -156,6 +169,7 @@ record Settings(
         checks.put("Scaffold", scaffold.enabled());
         checks.put("KillAura", killAura.enabled());
         checks.put("Xray", xray.enabled());
+        checks.put("AutoClicker", autoClicker.enabled());
         return checks;
     }
 }

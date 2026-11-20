@@ -101,6 +101,20 @@ checks:
     ores: [DIAMOND_ORE, DEEPSLATE_DIAMOND_ORE, EMERALD_ORE, DEEPSLATE_EMERALD_ORE, ANCIENT_DEBRIS]
     stone: [STONE, DEEPSLATE, TUFF, GRANITE, DIORITE, ANDESITE, NETHERRACK, BASALT, BLACKSTONE]
 
+  autoclicker:
+    # Clicks (arm swings) that do not hit a block: too many per second, or too evenly spaced.
+    # Holding the mouse on a block swings every tick, so swings aimed at a block are ignored.
+    enabled: true
+    # Butterfly and drag clicking can reach 20+ clicks per second, so keep this high.
+    max-cps: 25
+    # Judge the rhythm over this many clicks in a row (pauses longer than 400 ms start over).
+    samples: 20
+    # Flag when the spacing between clicks varies by less than this (standard deviation, ms).
+    # People vary by 20-50 ms; click macros by a few. Network jitter adds some variation for everyone.
+    min-deviation-ms: 10
+    # Only judge the rhythm while clicking at least this fast.
+    min-cps: 8
+
 grace:
   # Ticks to skip all movement checks after knockback, damage, explosions, or server-applied velocity.
   knockback-ticks: 30

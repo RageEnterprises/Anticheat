@@ -11,10 +11,13 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
+import org.bukkit.event.player.PlayerAnimationEvent;
+import org.bukkit.event.player.PlayerAnimationType;
+import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.util.BoundingBox;
 import org.bukkit.util.Vector;
 
-/** Melee checks: Reach and KillAura. Flagged hits are cancelled. */
+/** Melee checks: Reach and KillAura (flagged hits are cancelled) and AutoClicker. */
 final class CombatListener implements Listener {
 
     private final RageAnticheat plugin;
@@ -54,6 +57,60 @@ final class CombatListener implements Listener {
         if (check != null) {
             event.setCancelled(true);
             plugin.flag(player, d, check, details);
+        }
+    }
+
+    /** Survival block reach; a swing at a block this close is mining or placing, not a click. */
+    private static final double BLOCK_REACH = 4.5;
+    /** A pause this long starts a new click streak. */
+    private static final long MAX_CLICK_GAP_MS = 400;
+
+    /** Dropping an item swings the arm right after the drop packet. */
+    private static final long DROP_SWING_NANOS = 100_000_000L;
+
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onDrop(PlayerDropItemEvent event) {
+        plugin.data(event.getPlayer()).lastDropNanos = System.nanoTime();
+    }
+
+    /**
+     * Arm swings arrive with real-time precision because the server handles packets between ticks.
+     * Swings are counted as clicks only when no block is under the crosshair: holding the button on
+     * a block swings every tick.
+     */
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onSwing(PlayerAnimationEvent event) {
+        Settings.AutoClicker a = plugin.settings().autoClicker();
+        Player player = event.getPlayer();
+        if (!a.enabled() || event.getAnimationType() != PlayerAnimationType.ARM_SWING
+                || player.getGameMode() == GameMode.CREATIVE || player.hasPermission(MovementListener.BYPASS)) {
+            return;
+        }
+        PlayerData d = plugin.data(player);
+        long nanos = System.nanoTime();
+        if (plugin.serverLagging(nanos) || nanos - d.lastDropNanos < DROP_SWING_NANOS
+                || player.rayTraceBlocks(BLOCK_REACH) != null) {
+            // A lag spike delivers clicks in a burst; mining, and holding the drop key, are not clicking.
+            d.clicks.reset();
+            return;
+        }
+        long now = nanos / 1_000_000L;
+        d.clicks.click(now, MAX_CLICK_GAP_MS);
+        int cps = d.clicks.cps(now);
+        String details = null;
+        if (cps > a.maxCps()) {
+            details = String.format("%d clicks per second, max %d", cps, a.maxCps());
+        } else if (d.clicks.full(a.samples())) {
+            double mean = d.clicks.meanInterval(a.samples());
+            double deviation = d.clicks.deviation(a.samples());
+            if (mean <= 1000.0 / a.minCps() && deviation < a.minDeviationMs()) {
+                details = String.format("%d clicks at %.1f CPS spaced within %.1f ms (min %.1f)",
+                        a.samples(), 1000 / mean, deviation, a.minDeviationMs());
+            }
+        }
+        if (details != null) {
+            d.clicks.reset();
+            plugin.flag(player, d, "AutoClicker", details);
         }
     }
 
