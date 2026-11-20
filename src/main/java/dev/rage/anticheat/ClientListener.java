@@ -4,7 +4,9 @@ import dev.rage.anticheat.logic.Durations;
 import dev.rage.anticheat.logic.ModBlocklist;
 import dev.rage.anticheat.moderation.Moderation;
 import dev.rage.anticheat.moderation.Punishment;
+import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -21,16 +23,23 @@ import org.bukkit.event.player.PlayerRegisterChannelEvent;
  * Refuses clients that announce a blocked mod: through their client brand, or through the plugin
  * channels their mods register. Modern clients send both while connecting, before the join.
  * Cheat clients can hide or fake both, so this only stops clients that identify themselves.
+ *
+ * <p>Spoofing is caught where it leaves gaps: a "vanilla" brand with channels only mods register
+ * (brand changers leave the mod loader's channels), or a brand that changes after joining.
  */
 final class ClientListener implements Listener {
 
     static final String BYPASS = "rageanticheat.mods.bypass";
     /** Some clients send their brand just after joining, so check again a moment later. */
     private static final long RECHECK_TICKS = 40;
+    /** Shown as the mod when a client hides what it runs. */
+    private static final String SPOOFED = "hidden mods (spoofed client brand)";
 
     private final RageAnticheat plugin;
     /** Players already reported this session, so several blocked channels give one alert. */
     private final Set<UUID> reported = ConcurrentHashMap.newKeySet();
+    /** The first brand each player sent, to catch it changing. */
+    private final Map<UUID, String> brands = new ConcurrentHashMap<>();
 
     ClientListener(RageAnticheat plugin) {
         this.plugin = plugin;
@@ -65,6 +74,9 @@ final class ClientListener implements Listener {
         String mod = new ModBlocklist(c.getStringList("blocked")).match(event.getChannel());
         if (mod != null) {
             refuse(player, mod, "channel " + event.getChannel());
+        } else if (c.getBoolean("detect-spoofing", true) && "vanilla".equalsIgnoreCase(player.getClientBrandName())
+                && ModBlocklist.moddedChannel(List.of(event.getChannel())) != null) {
+            refuse(player, SPOOFED, "brand vanilla, but registers channel " + event.getChannel());
         }
     }
 
@@ -75,6 +87,11 @@ final class ClientListener implements Listener {
             return false;
         }
         String brand = player.getClientBrandName();
+        String spoof = c.getBoolean("detect-spoofing", true) ? spoofed(player, brand) : null;
+        if (spoof != null) {
+            refuse(player, SPOOFED, spoof);
+            return true;
+        }
         if (c.getBoolean("vanilla-only", false) && brand != null && !brand.equalsIgnoreCase("vanilla")) {
             refuse(player, brand, "modified client (brand " + brand + ")");
             return true;
@@ -89,9 +106,26 @@ final class ClientListener implements Listener {
         return true;
     }
 
+    /** How the client gave away a fake brand, or null. */
+    private String spoofed(Player player, String brand) {
+        if (brand == null) {
+            return null;
+        }
+        String first = brands.putIfAbsent(player.getUniqueId(), brand);
+        if (first != null && !first.equals(brand)) {
+            return "brand changed from " + first + " to " + brand + " after joining";
+        }
+        String channel = ModBlocklist.moddedChannel(player.getListeningPluginChannels());
+        if (brand.equalsIgnoreCase("vanilla") && channel != null) {
+            return "brand vanilla, but registers channel " + channel;
+        }
+        return null;
+    }
+
     @EventHandler(priority = EventPriority.MONITOR)
     public void onQuit(PlayerQuitEvent event) {
         reported.remove(event.getPlayer().getUniqueId());
+        brands.remove(event.getPlayer().getUniqueId());
     }
 
     private void refuse(Player player, String mod, String source) {

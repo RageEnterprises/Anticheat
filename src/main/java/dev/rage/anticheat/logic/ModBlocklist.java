@@ -2,6 +2,7 @@ package dev.rage.anticheat.logic;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
@@ -12,6 +13,9 @@ import java.util.Set;
  * "impactful".
  */
 public final class ModBlocklist {
+
+    /** Channel namespaces that vanilla clients, proxies and protocol translators use. */
+    private static final List<String> VANILLA_NAMESPACES = List.of("minecraft:", "bungeecord:", "velocity:");
 
     private final Set<String> blocked = new HashSet<>();
 
@@ -47,6 +51,20 @@ public final class ModBlocklist {
             found = match(channel);
             if (found != null) {
                 return found;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * The first channel that only a mod would register, or null. The vanilla client registers
+     * none, so a client calling itself "vanilla" with such a channel is hiding its mods.
+     */
+    public static String moddedChannel(Collection<String> channels) {
+        for (String channel : channels) {
+            String lower = channel.toLowerCase(Locale.ROOT);
+            if (VANILLA_NAMESPACES.stream().noneMatch(lower::startsWith)) {
+                return channel;
             }
         }
         return null;

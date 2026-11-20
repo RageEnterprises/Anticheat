@@ -29,4 +29,12 @@ class ModBlocklistTest {
     void emptyListMatchesNothing() {
         assertNull(new ModBlocklist(List.of()).match("wurst"));
     }
+
+    @Test
+    void findsChannelsOnlyModsRegister() {
+        assertEquals("fabric:registry/sync",
+                ModBlocklist.moddedChannel(List.of("minecraft:brand", "fabric:registry/sync")));
+        assertNull(ModBlocklist.moddedChannel(List.of("minecraft:brand", "BungeeCord:main", "velocity:player_info")));
+        assertNull(ModBlocklist.moddedChannel(List.of()));
+    }
 }

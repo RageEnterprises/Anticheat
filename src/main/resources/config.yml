@@ -190,6 +190,10 @@ client-mods:
   # Only allow the unmodified vanilla client (brand "vanilla"). This also refuses Fabric, Forge,
   # Lunar, Badlion and other launchers, even without cheat mods.
   vanilla-only: false
+  # Refuse clients caught faking their brand to hide mods: brand "vanilla" while registering
+  # channels only mods register (brand changers leave the mod loader's channels behind), or a
+  # brand that changes after joining. Uses the action above.
+  detect-spoofing: true
   # Whole words matched in the brand and channel names, case-insensitive.
   blocked: [wurst, meteor, aristois, impact, liquidbounce, rusherhack, future, inertia, kamiblue, salhack,
             konas, phobos, bleachhack, thunderhack, baritone, freecam, xray, killaura]
