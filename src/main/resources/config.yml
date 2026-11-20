@@ -66,6 +66,15 @@ checks:
     # Largest angle between the crosshair and the block centre, in degrees.
     max-angle: 75
 
+  scaffold:
+    # Placing blocks against a face the player is not looking at (bridging cheats), or too fast.
+    enabled: true
+    # Flag after this many look/face mismatches within miss-window-ticks. One miss can be a turn while clicking.
+    max-misses: 3
+    miss-window-ticks: 60
+    # Holding right-click places 5 per second; fast clicking can reach about 15.
+    max-per-second: 20
+
 grace:
   # Ticks to skip all movement checks after knockback, damage, explosions, or server-applied velocity.
   knockback-ticks: 30

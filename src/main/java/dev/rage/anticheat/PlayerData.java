@@ -42,7 +42,13 @@ final class PlayerData {
     PlayerData(Settings s) {
         speed = new SpeedTracker(s.speedSamples());
         breaks = new EventWindow(s.nuker().maxPerSecond() + 1);
+        places = new EventWindow(s.scaffold().maxPerSecond() + 1);
+        placeMisses = new EventWindow(s.scaffold().maxMisses() + 1);
     }
+
+    /** Blocks placed recently, and placements against a face the player was not looking at, for Scaffold. */
+    final EventWindow places;
+    final EventWindow placeMisses;
 
     void setSafe(Location loc) {
         safeWorld = loc.getWorld();

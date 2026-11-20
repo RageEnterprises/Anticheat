@@ -9,10 +9,13 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.block.BlockFace;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.util.RayTraceResult;
 import org.bukkit.util.Vector;
 
-/** Block checks: Nuker. Flagged actions are cancelled. */
+/** Block checks: Nuker and Scaffold. Flagged actions are cancelled. */
 final class BlockListener implements Listener {
 
     private final RageAnticheat plugin;
@@ -34,6 +37,51 @@ final class BlockListener implements Listener {
             event.setCancelled(true);
             plugin.flag(player, d, "Nuker", details);
         }
+    }
+
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onPlace(BlockPlaceEvent event) {
+        Player player = event.getPlayer();
+        Settings s = plugin.settings();
+        if (!s.scaffold().enabled() || player.getGameMode() == GameMode.CREATIVE
+                || player.hasPermission(MovementListener.BYPASS)) {
+            return;
+        }
+        PlayerData d = plugin.data(player);
+        String details = scaffold(player, d, s.scaffold(), event.getBlockPlaced(), event.getBlockAgainst());
+        if (details != null) {
+            event.setCancelled(true);
+            plugin.flag(player, d, "Scaffold", details);
+        }
+    }
+
+    /**
+     * A vanilla client places a block against the face under its crosshair. Scaffold cheats place
+     * blocks under the player while looking elsewhere. Single misses happen when the player turns
+     * just as they click, so only repeated misses are flagged.
+     */
+    private static String scaffold(Player player, PlayerData d, Settings.Scaffold sc, Block placed, Block against) {
+        int now = Bukkit.getCurrentTick();
+        int perSecond = d.places.record(now, 20);
+        if (perSecond > sc.maxPerSecond()) {
+            return perSecond + " blocks placed in one second";
+        }
+        BlockFace face = against.getFace(placed);
+        if (face == null || placed.equals(against)) {
+            return null; // replaced a block such as tall grass; no face to compare
+        }
+        RayTraceResult hit = player.rayTraceBlocks(6.0);
+        boolean looking = hit != null && against.equals(hit.getHitBlock()) && face == hit.getHitBlockFace();
+        if (looking) {
+            return null;
+        }
+        int misses = d.placeMisses.record(now, sc.missWindowTicks());
+        if (misses < sc.maxMisses()) {
+            return null;
+        }
+        d.placeMisses.clear();
+        return String.format("%d blocks placed against a face the player was not looking at (looking at %s)",
+                misses, hit == null || hit.getHitBlock() == null ? "nothing" : hit.getHitBlockFace());
     }
 
     /** Too many blocks per tick or second, or a block the player cannot be looking at. */

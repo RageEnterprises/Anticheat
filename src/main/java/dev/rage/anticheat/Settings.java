@@ -31,7 +31,8 @@ record Settings(
         double decayPerSecond,
         boolean kickEnabled,
         boolean alertsEnabled,
-        Nuker nuker) {
+        Nuker nuker,
+        Scaffold scaffold) {
 
     /** Breaking too many blocks, too far away, or outside the player's view. */
     record Nuker(boolean enabled, int maxPerTick, int maxPerSecond, double maxDistance, double maxAngle) {
@@ -41,6 +42,16 @@ record Settings(
                     Math.max(1, c.getInt("max-per-second", 22)),
                     c.getDouble("max-distance", 6.0),
                     c.getDouble("max-angle", 75));
+        }
+    }
+
+    /** Placing blocks against a face the player is not looking at, or too quickly. */
+    record Scaffold(boolean enabled, int maxMisses, int missWindowTicks, int maxPerSecond) {
+        static Scaffold from(ConfigurationSection c) {
+            return new Scaffold(c.getBoolean("enabled", true),
+                    Math.max(1, c.getInt("max-misses", 3)),
+                    Math.max(1, c.getInt("miss-window-ticks", 60)),
+                    Math.max(1, c.getInt("max-per-second", 20)));
         }
     }
 
@@ -78,7 +89,8 @@ record Settings(
                 Math.max(0, c.getDouble("violations.decay-per-second", 0.5)),
                 c.getBoolean("violations.kick-enabled", true),
                 c.getBoolean("alerts.enabled", true),
-                Nuker.from(section(c, "checks.nuker")));
+                Nuker.from(section(c, "checks.nuker")),
+                Scaffold.from(section(c, "checks.scaffold")));
     }
 
     /** Check name to enabled state, in display order. */
@@ -93,6 +105,7 @@ record Settings(
         checks.put("Timer", timerEnabled);
         checks.put("Reach", reachEnabled);
         checks.put("Nuker", nuker.enabled());
+        checks.put("Scaffold", scaffold.enabled());
         return checks;
     }
 }
