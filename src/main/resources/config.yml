@@ -23,6 +23,11 @@ checks:
     max-excess: 0.1
     samples: 10
 
+  noslow:
+    # Moving at full speed while eating, drinking, blocking with a shield or drawing a bow. Vanilla
+    # slows the player to a fifth of their speed. Part of the speed prediction, so it needs speed enabled.
+    enabled: true
+
   jesus:
     # Walking on water or lava.
     enabled: true
@@ -66,6 +71,13 @@ checks:
     # Largest angle between the crosshair and the block centre, in degrees.
     max-angle: 75
 
+  fastbreak:
+    # Mining a block faster than the tool, enchantments and effects allow. Flagged breaks are cancelled.
+    enabled: true
+    # Flag when a block is mined in less than this share of the vanilla time. Vanilla servers accept
+    # 0.7, which is what FastBreak cheats use. Lower this if players with unstable ping get flagged.
+    min-ratio: 0.8
+
   scaffold:
     # Placing blocks against a face the player is not looking at (bridging cheats), or too fast.
     enabled: true
@@ -100,6 +112,35 @@ checks:
     max-ores-per-stone: 0.02
     ores: [DIAMOND_ORE, DEEPSLATE_DIAMOND_ORE, EMERALD_ORE, DEEPSLATE_EMERALD_ORE, ANCIENT_DEBRIS]
     stone: [STONE, DEEPSLATE, TUFF, GRANITE, DIORITE, ANDESITE, NETHERRACK, BASALT, BLACKSTONE]
+
+  autoclicker:
+    # Clicks (arm swings) that do not hit a block: too many per second, or too evenly spaced.
+    # Holding the mouse on a block swings every tick, so swings aimed at a block are ignored.
+    enabled: true
+    # Butterfly and drag clicking can reach 20+ clicks per second, so keep this high.
+    max-cps: 25
+    # Judge the rhythm over this many clicks in a row (pauses longer than 400 ms start over).
+    samples: 20
+    # Flag when the spacing between clicks varies by less than this (standard deviation, ms).
+    # People vary by 20-50 ms; click macros by a few. Network jitter adds some variation for everyone.
+    min-deviation-ms: 10
+    # Only judge the rhythm while clicking at least this fast.
+    min-cps: 8
+
+  crystal:
+    # Crystal aura: breaking an end crystal before the client could have seen it spawn (ID
+    # prediction), or placing/breaking crystals faster than people can. Flagged actions are cancelled.
+    # Crystal hits also get the KillAura crosshair test.
+    enabled: true
+    max-breaks-per-second: 12
+    max-places-per-second: 12
+
+  autototem:
+    # Moving a new totem into the off hand right after one pops. Measured from the inventory click
+    # packets: time from the pop to the refill click, minus the player's ping. Flagged refills are cancelled.
+    enabled: true
+    # People need at least 150 ms to see the pop and click; auto-totem cheats need a few.
+    min-reaction-ms: 80
 
 grace:
   # Ticks to skip all movement checks after knockback, damage, explosions, or server-applied velocity.
@@ -138,12 +179,44 @@ exploits:
   # The vanilla client cannot type more than about 90 characters per line; the protocol allows 384.
   max-sign-line-chars: 384
 
+client-mods:
+  # Refuse clients that announce a blocked mod, through their client brand or the plugin channels
+  # their mods register. Cheat clients can hide both, and freecam leaves no trace on the server at all,
+  # so this only stops clients that identify themselves. Players with rageanticheat.mods.bypass are skipped.
+  enabled: true
+  # kick, ban or none (alert staff only). Kicks are not recorded as punishments.
+  action: kick
+  ban-duration: perm
+  # Only allow the unmodified vanilla client (brand "vanilla"). This also refuses Fabric, Forge,
+  # Lunar, Badlion and other launchers, even without cheat mods.
+  vanilla-only: false
+  # Whole words matched in the brand and channel names, case-insensitive.
+  blocked: [wurst, meteor, aristois, impact, liquidbounce, rusherhack, future, inertia, kamiblue, salhack,
+            konas, phobos, bleachhack, thunderhack, baritone, freecam, xray, killaura]
+
 moderation:
   # Announce punishments to every player. false: only staff with rageanticheat.alerts see them.
   broadcast: true
   default-reason: "No reason given"
   # Commands muted players cannot use, so they cannot get around a mute with private messages.
   muted-blocked-commands: [msg, tell, w, whisper, me, r, reply, say, m, t]
+
+chat:
+  anti-spam:
+    # Blocks chat spam. Private-message commands (moderation.muted-blocked-commands) count as chat.
+    # Players with rageanticheat.chat.bypass are not limited.
+    enabled: true
+    # At most max-messages messages within window-seconds.
+    max-messages: 5
+    window-seconds: 5
+    # The same message (ignoring case, spaces and punctuation) cannot be sent again within this many seconds. 0 = off.
+    repeat-seconds: 30
+    auto-mute:
+      # Mute players whose messages were blocked <strikes> times within window-seconds.
+      enabled: true
+      strikes: 5
+      window-seconds: 60
+      duration: 10m
 
 anti-bot:
   enabled: true

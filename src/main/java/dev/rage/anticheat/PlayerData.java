@@ -1,5 +1,6 @@
 package dev.rage.anticheat;
 
+import dev.rage.anticheat.logic.ClickStats;
 import dev.rage.anticheat.logic.EventWindow;
 import dev.rage.anticheat.logic.SpeedTracker;
 import dev.rage.anticheat.logic.TargetTracker;
@@ -42,6 +43,13 @@ final class PlayerData {
     int breakTick = -1;
     int breaksThisTick;
 
+    /** The block being mined, for FastBreak. digNanos is 0 when no block is being mined. */
+    long digNanos;
+    int digX;
+    int digY;
+    int digZ;
+    double digSpeed;
+
     PlayerData(Settings s) {
         speed = new SpeedTracker(s.speedSamples());
         breaks = new EventWindow(s.nuker().maxPerSecond() + 1);
@@ -49,7 +57,21 @@ final class PlayerData {
         placeMisses = new EventWindow(s.scaffold().maxMisses() + 1);
         attackMisses = new EventWindow(s.killAura().maxMisses() + 1);
         attackTargets = new TargetTracker(s.killAura().maxTargets() + 1);
+        crystalBreaks = new EventWindow(s.crystal().maxBreaksPerSecond() + 1);
+        crystalPlaces = new EventWindow(s.crystal().maxPlacesPerSecond() + 1);
+        clicks = new ClickStats(Math.max(s.autoClicker().samples(), s.autoClicker().maxCps()) + 2);
     }
+
+    /** Recent arm swings that did not hit a block, for AutoClicker. */
+    final ClickStats clicks;
+    long lastDropNanos = Long.MIN_VALUE / 2;
+
+    /** End crystals broken and placed recently, for CrystalAura. */
+    final EventWindow crystalBreaks;
+    final EventWindow crystalPlaces;
+
+    /** When the last totem of undying popped, for AutoTotem. */
+    long totemPopNanos = Long.MIN_VALUE / 2;
 
     /** Hits outside the crosshair, and recent attack targets, for KillAura. */
     final EventWindow attackMisses;

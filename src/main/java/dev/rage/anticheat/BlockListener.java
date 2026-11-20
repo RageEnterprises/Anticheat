@@ -12,11 +12,12 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.block.BlockFace;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockDamageEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.util.RayTraceResult;
 import org.bukkit.util.Vector;
 
-/** Block checks: Nuker and Scaffold (flagged actions are cancelled) and Xray (alerts). */
+/** Block checks: Nuker, FastBreak and Scaffold (flagged actions are cancelled) and Xray (alerts). */
 final class BlockListener implements Listener {
 
     private final RageAnticheat plugin;
@@ -34,15 +35,70 @@ final class BlockListener implements Listener {
         Settings s = plugin.settings();
         PlayerData d = plugin.data(player);
         String details = s.nuker().enabled() ? nuker(player, d, s.nuker(), event.getBlock()) : null;
+        String check = "Nuker";
+        if (details == null && s.fastBreak().enabled()) {
+            details = fastBreak(player, d, s.fastBreak(), event.getBlock());
+            check = "FastBreak";
+        }
         if (details != null) {
             event.setCancelled(true);
-            plugin.flag(player, d, "Nuker", details);
+            plugin.flag(player, d, check, details);
             return;
         }
         if (s.xray().enabled()) {
             xray(player, d, s.xray(), event.getBlock());
         }
     }
+
+    /** Remembers when the player started mining a block, and how fast they could mine it then. */
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onStartBreaking(BlockDamageEvent event) {
+        Block block = event.getBlock();
+        PlayerData d = plugin.data(event.getPlayer());
+        d.digNanos = event.getInstaBreak() ? 0 : System.nanoTime();
+        d.digX = block.getX();
+        d.digY = block.getY();
+        d.digZ = block.getZ();
+        d.digSpeed = block.getBreakSpeed(event.getPlayer());
+    }
+
+    /**
+     * The client sends "start" and "finish" packets for each block it mines, and the time between
+     * them follows from the block, tool, enchantments and effects. Vanilla servers accept blocks
+     * finished at 70% of that time, which FastBreak cheats use. Real time is used, not server
+     * ticks, so a lagging server does not make players look fast.
+     */
+    private String fastBreak(Player player, PlayerData d, Settings.FastBreak f, Block block) {
+        long started = d.digNanos;
+        d.digNanos = 0;
+        if (started == 0 || block.getX() != d.digX || block.getY() != d.digY || block.getZ() != d.digZ) {
+            return null;
+        }
+        long now = System.nanoTime();
+        if (plugin.serverLagging(now)) {
+            return null;
+        }
+        // The faster of the start and the end, in case a tool, effect or position changed in between.
+        double perTick = Math.max(d.digSpeed, block.getBreakSpeed(player));
+        if (perTick <= 0) {
+            return null;
+        }
+        double expectedMs = Math.ceil(1 / perTick) * 50;
+        if (expectedMs < MIN_JUDGED_MS) {
+            return null; // network jitter is too large a share of such short times
+        }
+        double tookMs = (now - started) / 1_000_000.0;
+        if (tookMs + GRACE_MS >= expectedMs * f.minRatio()) {
+            return null;
+        }
+        return String.format("mined %s in %.0f ms, takes %.0f ms (min %.0f%%)",
+                block.getType().getKey().getKey(), tookMs, expectedMs, f.minRatio() * 100);
+    }
+
+    /** Blocks mined faster than this are not judged. */
+    private static final double MIN_JUDGED_MS = 200;
+    /** Covers a start packet that arrived late. */
+    private static final double GRACE_MS = 50;
 
     /** X-ray is a pattern over many blocks, so it alerts staff (or adds a violation) but never cancels. */
     private void xray(Player player, PlayerData d, Settings.Xray x, Block block) {

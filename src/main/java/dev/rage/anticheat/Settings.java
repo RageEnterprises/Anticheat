@@ -39,7 +39,47 @@ record Settings(
         Nuker nuker,
         Scaffold scaffold,
         KillAura killAura,
-        Xray xray) {
+        Xray xray,
+        AutoClicker autoClicker,
+        Crystal crystal,
+        AutoTotem autoTotem,
+        boolean noSlowEnabled,
+        FastBreak fastBreak) {
+
+    /** Mining blocks faster than the tool and effects allow. */
+    record FastBreak(boolean enabled, double minRatio) {
+        static FastBreak from(ConfigurationSection c) {
+            return new FastBreak(c.getBoolean("enabled", true),
+                    Math.max(0, Math.min(1, c.getDouble("min-ratio", 0.8))));
+        }
+    }
+
+    /** Moving a totem into the off hand faster than a person can react to the last one popping. */
+    record AutoTotem(boolean enabled, long minReactionMs) {
+        static AutoTotem from(ConfigurationSection c) {
+            return new AutoTotem(c.getBoolean("enabled", true), Math.max(0, c.getLong("min-reaction-ms", 80)));
+        }
+    }
+
+    /** Crystal aura: breaking end crystals faster than the client could see them, or too many per second. */
+    record Crystal(boolean enabled, int maxBreaksPerSecond, int maxPlacesPerSecond) {
+        static Crystal from(ConfigurationSection c) {
+            return new Crystal(c.getBoolean("enabled", true),
+                    Math.max(1, c.getInt("max-breaks-per-second", 12)),
+                    Math.max(1, c.getInt("max-places-per-second", 12)));
+        }
+    }
+
+    /** Clicking faster than people can, or at a machine-like even rhythm. */
+    record AutoClicker(boolean enabled, int maxCps, int samples, double minDeviationMs, int minCps) {
+        static AutoClicker from(ConfigurationSection c) {
+            return new AutoClicker(c.getBoolean("enabled", true),
+                    Math.max(1, c.getInt("max-cps", 25)),
+                    Math.max(5, c.getInt("samples", 20)),
+                    Math.max(0, c.getDouble("min-deviation-ms", 10)),
+                    Math.max(1, c.getInt("min-cps", 8)));
+        }
+    }
 
     /** Breaking too many blocks, too far away, or outside the player's view. */
     record Nuker(boolean enabled, int maxPerTick, int maxPerSecond, double maxDistance, double maxAngle) {
@@ -138,7 +178,12 @@ record Settings(
                 Nuker.from(section(c, "checks.nuker")),
                 Scaffold.from(section(c, "checks.scaffold")),
                 KillAura.from(section(c, "checks.killaura")),
-                Xray.from(section(c, "checks.xray"), logger));
+                Xray.from(section(c, "checks.xray"), logger),
+                AutoClicker.from(section(c, "checks.autoclicker")),
+                Crystal.from(section(c, "checks.crystal")),
+                AutoTotem.from(section(c, "checks.autototem")),
+                c.getBoolean("checks.noslow.enabled", true),
+                FastBreak.from(section(c, "checks.fastbreak")));
     }
 
     /** Check name to enabled state, in display order. */
@@ -147,15 +192,20 @@ record Settings(
         checks.put("Flight", flightEnabled);
         checks.put("Spider", spiderEnabled);
         checks.put("Speed", speedEnabled);
+        checks.put("NoSlow", speedEnabled && noSlowEnabled);
         checks.put("Jesus", jesusEnabled);
         checks.put("Step", stepEnabled);
         checks.put("NoFall", noFallEnabled);
         checks.put("Timer", timerEnabled);
         checks.put("Reach", reachEnabled);
         checks.put("Nuker", nuker.enabled());
+        checks.put("FastBreak", fastBreak.enabled());
         checks.put("Scaffold", scaffold.enabled());
         checks.put("KillAura", killAura.enabled());
         checks.put("Xray", xray.enabled());
+        checks.put("AutoClicker", autoClicker.enabled());
+        checks.put("CrystalAura", crystal.enabled());
+        checks.put("AutoTotem", autoTotem.enabled());
         return checks;
     }
 }

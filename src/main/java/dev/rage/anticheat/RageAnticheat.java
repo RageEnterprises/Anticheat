@@ -9,6 +9,7 @@ import dev.rage.anticheat.moderation.AntiBot;
 import dev.rage.anticheat.moderation.ChatListener;
 import dev.rage.anticheat.moderation.Freeze;
 import dev.rage.anticheat.moderation.LoginListener;
+import dev.rage.anticheat.moderation.Maintenance;
 import dev.rage.anticheat.moderation.Moderation;
 import dev.rage.anticheat.moderation.ModerationCommand;
 import dev.rage.anticheat.moderation.Profiles;
@@ -41,6 +42,7 @@ public final class RageAnticheat extends JavaPlugin {
     private Database database;
     private Moderation moderation;
     private Freeze freeze;
+    private Maintenance maintenance;
     private Profiles profiles;
     private VpnCheck vpnCheck;
     private final Set<String> webhookEvents = new HashSet<>();
@@ -83,6 +85,13 @@ public final class RageAnticheat extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new LoginListener(this, moderation, alts), this);
         getServer().getPluginManager().registerEvents(new ChatListener(this, moderation), this);
         getServer().getPluginManager().registerEvents(new AntiBot(this), this);
+        maintenance = new Maintenance(this);
+        getServer().getPluginManager().registerEvents(maintenance, this);
+        PluginCommand maintenanceCommand = getCommand("maintenance");
+        if (maintenanceCommand != null) {
+            maintenanceCommand.setExecutor(maintenance);
+            maintenanceCommand.setTabCompleter(maintenance);
+        }
         freeze = new Freeze(this);
         getServer().getPluginManager().registerEvents(freeze, this);
         PluginCommand freezeCommand = getCommand("freeze");
@@ -102,6 +111,8 @@ public final class RageAnticheat extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new CombatListener(this), this);
         getServer().getPluginManager().registerEvents(new BlockListener(this), this);
         getServer().getPluginManager().registerEvents(new ExploitListener(this), this);
+        getServer().getPluginManager().registerEvents(new InventoryListener(this), this);
+        getServer().getPluginManager().registerEvents(new ClientListener(this), this);
 
         // Server lag detection for the Timer check: a slow tick delivers queued packets in a burst.
         lastTickNanos = System.nanoTime();
@@ -145,6 +156,10 @@ public final class RageAnticheat extends JavaPlugin {
 
     public Moderation moderation() {
         return moderation;
+    }
+
+    public Maintenance maintenance() {
+        return maintenance;
     }
 
     public Freeze freeze() {
