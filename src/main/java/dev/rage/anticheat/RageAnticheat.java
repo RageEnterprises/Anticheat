@@ -4,6 +4,7 @@ import dev.rage.anticheat.discord.DiscordWebhook;
 import dev.rage.anticheat.moderation.Database;
 import dev.rage.anticheat.logic.Durations;
 import dev.rage.anticheat.moderation.Alts;
+import dev.rage.anticheat.moderation.AntiBot;
 import dev.rage.anticheat.moderation.ChatListener;
 import dev.rage.anticheat.moderation.Freeze;
 import dev.rage.anticheat.moderation.LoginListener;
@@ -78,6 +79,7 @@ public final class RageAnticheat extends JavaPlugin {
         }
         getServer().getPluginManager().registerEvents(new LoginListener(this, moderation, alts), this);
         getServer().getPluginManager().registerEvents(new ChatListener(this, moderation), this);
+        getServer().getPluginManager().registerEvents(new AntiBot(this), this);
         freeze = new Freeze(this);
         getServer().getPluginManager().registerEvents(freeze, this);
         PluginCommand freezeCommand = getCommand("freeze");

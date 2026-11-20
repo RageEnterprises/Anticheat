@@ -145,6 +145,16 @@ moderation:
   # Commands muted players cannot use, so they cannot get around a mute with private messages.
   muted-blocked-commands: [msg, tell, w, whisper, me, r, reply, say, m, t]
 
+anti-bot:
+  enabled: true
+  # Accounts that may be online from one IP at the same time. 0 = no limit.
+  max-accounts-per-ip: 3
+  # Attack mode: when more than max-new-players first-time players connect within window-seconds,
+  # first-time players are refused for attack-mode-seconds. Players who joined before can always join.
+  max-new-players: 8
+  window-seconds: 10
+  attack-mode-seconds: 60
+
 anti-vpn:
   # Refuse players who connect through a VPN or proxy. Uses proxycheck.io: each joining player's IP is
   # sent to that service (cached for cache-hours). Behind BungeeCord/Velocity, enable IP forwarding.
