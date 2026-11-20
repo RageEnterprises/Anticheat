@@ -4,14 +4,14 @@
 
 **An open-source anti-cheat and moderation suite for Paper servers.**
 
-One plugin catches movement, combat, block and inventory cheats, blocks crash exploits and cheat clients, and gives your staff bans, mutes, freezes, chat anti-spam, maintenance mode, player profiles, alt detection, anti-VPN, anti-bot and a Discord bot.
+One plugin catches movement, combat, block and inventory cheats, blocks crash exploits and cheat clients, and gives your staff bans, mutes, freezes, chat anti-spam, maintenance mode, player profiles, alt detection, anti-VPN, anti-bot and a Discord bot. Anyone can add their own checks as [addons](ADDONS.md).
 
 [![Paper 1.20+](https://img.shields.io/badge/Paper-1.20%2B-b22222)](https://papermc.io)
 [![Java 17+](https://img.shields.io/badge/Java-17%2B-8b0000)](https://adoptium.net)
 [![Gradle](https://img.shields.io/badge/build-Gradle-b22222)](https://gradle.org)
 [![Issues](https://img.shields.io/github/issues/RageEnterprises/Anticheat?color=8b0000)](https://github.com/RageEnterprises/Anticheat/issues)
 
-[Features](#features) · [Installation](#installation) · [Commands](#commands-and-permissions) · [Discord](#discord) · [Configuration](#configuration) · [How it works](#how-the-checks-work) · [Contributing](#contributing)
+[Features](#features) · [Installation](#installation) · [Commands](#commands-and-permissions) · [Discord](#discord) · [Configuration](#configuration) · [How it works](#how-the-checks-work) · [Addons](ADDONS.md) · [Contributing](#contributing)
 
 </div>
 
@@ -49,6 +49,9 @@ One plugin catches movement, combat, block and inventory cheats, blocks crash ex
 | **AutoClicker** | Clicking faster than people can, or at a machine-even rhythm | Violation |
 | **CrystalAura** | Breaking end crystals before the client could see them, or too many per second | Hit or place cancelled |
 | **AutoTotem** | Refilling the off-hand totem faster than a person can react | Refill cancelled |
+| **InvalidRotation** | Pitch beyond straight up or down, sent by silent-aim and spin cheats | Violation |
+| **NoSwing** | Attacking without the arm swing packet that every vanilla attack sends | Violation |
+| **ImpossibleSprint** | Starting to sprint with 6 food or less, or while blind | Sprint cancelled |
 
 Each violation:
 
@@ -67,7 +70,7 @@ When the level reaches the limit, the player is **kicked or banned**, depending 
 | **Anti-bot** | Limits accounts per IP. During a join flood it turns on attack mode, in which only returning players can join. |
 | **Anti-VPN** | Optionally refuses VPN and proxy connections (via proxycheck.io), with an allow-list. |
 | **Alt detection** | Links accounts by shared IP, alerts staff when a player with alts joins, and can block alts of banned players. |
-| **Client mods** | Refuses clients whose brand or plugin channels name a blocked mod (Wurst, Meteor, Baritone and more), or every modded client with `vanilla-only`. |
+| **Client mods** | Refuses clients whose brand or plugin channels name a blocked mod (Wurst, Meteor, Baritone and more), or every modded client with `vanilla-only`. Also catches clients that fake a vanilla brand to hide their mods. |
 | **Chat anti-spam** | Blocks messages sent too fast or repeated, and mutes players who keep spamming. |
 | **Maintenance mode** | `/maintenance on` lets only ops and whitelisted players join, and the server list shows "Maintenance" instead of the ping bars. |
 
@@ -119,6 +122,7 @@ Durations look like `30s`, `10m`, `2h`, `1d12h`, `7d`, `2w`, `1mo`, `1y`, or `pe
 | `rageanticheat.mod.*` | op | Every moderation command. |
 | `rageanticheat.alerts` | op | Receive anticheat alerts and staff notices. |
 | `rageanticheat.bypass` | false | Skip the anticheat checks. |
+| `rageanticheat.bypass.<check>` | false | Skip one addon check, for example `rageanticheat.bypass.fastbow`. |
 | `rageanticheat.exploits.bypass` | false | Skip the crash-exploit limits. |
 | `rageanticheat.mod.exempt` | false | Cannot be punished or frozen by other players. The console still can. |
 | `rageanticheat.mod.clearchat.bypass` | op | Keep your chat when it is cleared. |
@@ -238,6 +242,7 @@ The player is flagged once the excess over a rolling window of moves adds up pas
 - **KillAura:** the check ray-traces from the attacker's eyes along their view. A hit on a target whose hitbox (expanded by `hitbox-expand` to allow for ping) is not under the crosshair counts as a miss. `max-misses` misses within the window flag the player. Hitting more than `max-targets` different entities within half a second also flags.
 - **AutoClicker:** the server handles packets between ticks, so arm swings arrive with real-time precision. Swings aimed at a block (mining, placing) and swings from dropping items are ignored. More than `max-cps` clicks per second flags, and so does a streak of `samples` clicks whose spacing varies by less than `min-deviation-ms`.
 - **CrystalAura:** a crystal's spawn packet goes out on the tick after it is placed and takes half the ping to reach the client. A hit on a crystal younger than that is aimed at a predicted entity ID, which only cheats do. Crystal places and breaks per second are limited, and crystal hits get the KillAura crosshair test.
+- **InvalidRotation, NoSwing, ImpossibleSprint:** packets the vanilla client cannot send. Its pitch is kept between -90 and 90 degrees, every attack comes with a swing packet in the same tick, and it does not start sprinting while hungry or blind. Food and effect changes get a second plus the ping of grace, because the client learns about them late.
 - **AutoTotem:** when a totem pops, the time until the click that moves the next totem into the off hand, minus the ping, is the player's reaction time. Each inventory click event is one click packet, so this works without ProtocolLib.
 
 </details>
@@ -259,7 +264,7 @@ The player is flagged once the excess over a rolling window of moves adds up pas
 - **Anti-bot:** runs before the ban and VPN checks, so a flood cannot use up the VPN lookup quota. Returning players, those with a profile, are never held back by attack mode.
 - **Anti-VPN:** each IP is looked up once per `cache-hours`. Local and LAN addresses are skipped. Behind BungeeCord or Velocity, enable IP forwarding so the plugin sees players' real IPs.
 - **Alts:** every join records the IP. Accounts that have used the same IP are linked.
-- **Client mods:** clients report a brand (`vanilla`, `fabric`, `forge`, ...) and the plugin channels their mods use. Both are matched against `client-mods.blocked` as whole words.
+- **Client mods:** clients report a brand (`vanilla`, `fabric`, `forge`, ...) and the plugin channels their mods use. Both are matched against `client-mods.blocked` as whole words. Brand changers that make a modded client say `vanilla` leave the mod loader's channels behind, which `detect-spoofing` catches, along with a brand that changes after joining.
 - **Chat anti-spam:** at most `max-messages` per `window-seconds`, and no repeat of the same message (ignoring case, spaces and punctuation) within `repeat-seconds`. Private-message commands count as chat. Every blocked message is a strike; enough strikes in a minute mute the player through the moderation system.
 - **Maintenance:** the state and whitelist are saved in `maintenance.yml`. The server list gets an unknown protocol version, so clients show the version text, "Maintenance", where the ping bars normally are.
 
@@ -290,7 +295,7 @@ No anti-cheat is perfect. These are the cases we know about:
 - **Shared IPs:** families, schools and public Wi-Fi share IPs, which affects alt detection and the per-IP limit. That's why blocking alts of banned players is off by default.
 - **Vanilla bans:** `/ban` overrides the vanilla command. Bans made with `minecraft:ban` or from before installing are not in RageAnticheat's database.
 - **Single server:** storage is SQLite on one server. It is not shared across a BungeeCord or Velocity network.
-- **Client mod detection only sees honest clients:** cheat clients can hide or fake their brand and channels. Freecam runs entirely on the client and leaves no trace the server can see; Paper's anti-xray and entity tracking limit what it reveals.
+- **Client mod detection only sees what clients send:** a cheat client that fakes a vanilla brand and registers no channels at all looks vanilla. Freecam runs entirely on the client and leaves no trace the server can see; Paper's anti-xray and entity tracking limit what it reveals.
 - **AutoClicker and AutoTotem need real-time packets:** under heavy server lag they reset rather than judge.
 - **Hovering in place:** a player hovering without moving sends no movement packets, so they are caught on their next move.
 
@@ -301,6 +306,10 @@ No anti-cheat is perfect. These are the cases we know about:
 - [ ] InventoryMove and AutoArmor
 - [ ] IP bans and IP mutes
 - [ ] In-game GUI for profiles and history
+
+## Addons
+
+RageAnticheat has an API for community-made checks. An addon is a small Paper plugin: extend `Check`, call `flag(player, details)`, register it with one line, and it gets the violation levels, alerts, Discord, profiles, punishments and bypass permissions of the built-in checks. See **[ADDONS.md](ADDONS.md)** and the [example addon](examples/example-addon).
 
 ## Building from source
 
@@ -329,11 +338,13 @@ Bug reports, false-positive reports and pull requests are all welcome.
 ```
 src/main/java/dev/rage/anticheat/
   RageAnticheat.java       plugin entry point, wiring, violations, Discord routing
+  api/                     public addon API: Check, RageAnticheatApi, PlayerFlagEvent
   MovementListener.java    Flight, Spider, Speed, NoSlow, Jesus, Step, NoFall, Timer
   CombatListener.java      Reach, KillAura, CrystalAura, AutoClicker
   BlockListener.java       Nuker, FastBreak, Scaffold, Xray
   InventoryListener.java   AutoTotem
-  ClientListener.java      blocked client mods (brand and channels)
+  ClientListener.java      blocked client mods (brand and channels), brand spoofing
+  PacketListener.java      InvalidRotation, NoSwing, ImpossibleSprint
   ExploitListener.java     book, item NBT and sign crash exploits
   RageCommand.java         /rageanticheat
   Settings.java            config.yml snapshot for the checks
@@ -357,6 +368,7 @@ src/main/java/dev/rage/anticheat/
     DiscordWebhook.java    rate-limited webhook posts
     DiscordBot.java        slash-command bot (JDA)
   logic/                   pure Java, no Bukkit imports, unit-tested
+examples/example-addon/    an addon with a ChestStealer check, built with the plugin
 ```
 
 ## License
