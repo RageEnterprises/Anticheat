@@ -138,3 +138,9 @@ maintenance-not-listed: "<#ffc2c2>{player}</#ffc2c2> is not on the maintenance w
 maintenance-list: "Maintenance is <#ffc2c2>{status}</#ffc2c2>. Whitelist ({count}): <#ffc2c2>{players}</#ffc2c2>"
 discord-maintenance-title: "Maintenance mode"
 usage-maintenance: 'Usage: /maintenance \<on|off|add|remove|list> [player]'
+
+# Blocked client mods. {player} {mod} {details}
+mod-screen: "<bold><gradient:#7a0000:#ff2a2a>RAGE</gradient></bold>\n\n<#ff6b6b>Your client uses a mod that is not allowed here:</#ff6b6b> <white>{mod}</white>\n\n<#8a8a8a>Remove it and join again.</#8a8a8a>"
+mod-alert: "<#ffc2c2>{player}</#ffc2c2> uses a blocked client mod: <#ffc2c2>{details}</#ffc2c2>"
+mod-reason: "Blocked client mod ({mod})"
+discord-mod-title: "Blocked client mod"

@@ -167,6 +167,21 @@ exploits:
   # The vanilla client cannot type more than about 90 characters per line; the protocol allows 384.
   max-sign-line-chars: 384
 
+client-mods:
+  # Refuse clients that announce a blocked mod, through their client brand or the plugin channels
+  # their mods register. Cheat clients can hide both, and freecam leaves no trace on the server at all,
+  # so this only stops clients that identify themselves. Players with rageanticheat.mods.bypass are skipped.
+  enabled: true
+  # kick, ban or none (alert staff only). Kicks are not recorded as punishments.
+  action: kick
+  ban-duration: perm
+  # Only allow the unmodified vanilla client (brand "vanilla"). This also refuses Fabric, Forge,
+  # Lunar, Badlion and other launchers, even without cheat mods.
+  vanilla-only: false
+  # Whole words matched in the brand and channel names, case-insensitive.
+  blocked: [wurst, meteor, aristois, impact, liquidbounce, rusherhack, future, inertia, kamiblue, salhack,
+            konas, phobos, bleachhack, thunderhack, baritone, freecam, xray, killaura]
+
 moderation:
   # Announce punishments to every player. false: only staff with rageanticheat.alerts see them.
   broadcast: true
