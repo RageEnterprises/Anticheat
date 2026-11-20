@@ -33,6 +33,23 @@ final class PlayerData {
     /** Server tick until which the vertical checks are skipped (water, ladders, levitation, bounces). */
     int flightGraceUntil;
 
+    /** Server tick until which knockback, damage or explosions may move the player. Unlike exemptUntil, gliding and riding do not extend it. */
+    int knockbackUntil;
+
+    /** ElytraFly: highest height-plus-speed energy since the glide or last boost, and boost state. */
+    double glidePeak = Double.NaN;
+    int glideLastTick;
+    int glideBoostUntil;
+    /** Where the player was gliding a second ago, for hovering. */
+    Location glideHover;
+
+    /** BoatFly and EntitySpeed: the vehicle's last position and how long it has hung in the air. */
+    double vehicleX;
+    double vehicleY;
+    double vehicleZ;
+    int vehicleTick = -1;
+    int vehicleAirMoves;
+
     private World safeWorld;
     private double safeX;
     private double safeY;

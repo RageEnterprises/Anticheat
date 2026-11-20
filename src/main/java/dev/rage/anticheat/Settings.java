@@ -46,7 +46,28 @@ record Settings(
         boolean noSlowEnabled,
         FastBreak fastBreak,
         Set<String> disabledAddons,
-        BadPackets badPackets) {
+        BadPackets badPackets,
+        Elytra elytra,
+        Vehicles vehicles) {
+
+    /** Boats and horses moving faster than they can, and boats flying. */
+    record Vehicles(boolean enabled, double maxBoatSpeed, double maxBoatIceSpeed, double mountSpeedFactor,
+                    int maxBoatAirMoves) {
+        static Vehicles from(ConfigurationSection c) {
+            return new Vehicles(c.getBoolean("enabled", true), Math.max(0.1, c.getDouble("max-boat-speed", 1.0)),
+                    Math.max(0.1, c.getDouble("max-boat-ice-speed", 4.0)),
+                    Math.max(1, c.getDouble("mount-speed-factor", 2.6)),
+                    Math.max(1, c.getInt("max-boat-air-moves", 10)));
+        }
+    }
+
+    /** Gliding faster, higher or longer than an elytra allows without a boost. */
+    record Elytra(boolean enabled, double maxSpeed, double climbMargin) {
+        static Elytra from(ConfigurationSection c) {
+            return new Elytra(c.getBoolean("enabled", true), Math.max(0.5, c.getDouble("max-speed", 3.5)),
+                    Math.max(0, c.getDouble("climb-margin", 3)));
+        }
+    }
 
     /** Packets a vanilla client never sends, which cheat clients send to spoof or skip things. */
     record BadPackets(boolean invalidRotation, boolean noSwing, boolean impossibleSprint) {
@@ -203,7 +224,9 @@ record Settings(
                 c.getBoolean("checks.noslow.enabled", true),
                 FastBreak.from(section(c, "checks.fastbreak")),
                 lowercase(c.getStringList("addons.disabled")),
-                BadPackets.from(section(c, "checks.badpackets")));
+                BadPackets.from(section(c, "checks.badpackets")),
+                Elytra.from(section(c, "checks.elytra")),
+                Vehicles.from(section(c, "checks.vehicles")));
     }
 
     /** Check name to enabled state, in display order. */
@@ -229,6 +252,9 @@ record Settings(
         checks.put("InvalidRotation", badPackets.invalidRotation());
         checks.put("NoSwing", badPackets.noSwing());
         checks.put("ImpossibleSprint", badPackets.impossibleSprint());
+        checks.put("ElytraFly", elytra.enabled());
+        checks.put("BoatFly", vehicles.enabled());
+        checks.put("EntitySpeed", vehicles.enabled());
         return checks;
     }
 }

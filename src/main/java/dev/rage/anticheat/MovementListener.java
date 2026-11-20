@@ -323,6 +323,7 @@ final class MovementListener implements Listener {
         PlayerData d = plugin.data(player);
         int until = Bukkit.getCurrentTick() + plugin.settings().knockbackGraceTicks();
         d.exemptUntil = Math.max(d.exemptUntil, until);
+        d.knockbackUntil = Math.max(d.knockbackUntil, until);
     }
 
     // --- World queries. Block lookups use World#getType so the common all-air case does not allocate. ---
@@ -331,7 +332,7 @@ final class MovementListener implements Listener {
      * True when the box centred on x/z, from y up by {@code height}, overlaps any block collision shape.
      * One extra layer below is scanned because fences and walls reach 0.5 above their own block.
      */
-    private static boolean collides(World world, BoundingBox box, double x, double y, double z,
+    static boolean collides(World world, BoundingBox box, double x, double y, double z,
                                     double halfWidth, double height) {
         box.resize(x - halfWidth, y, z - halfWidth, x + halfWidth, y + height, z + halfWidth);
         int minX = (int) Math.floor(box.getMinX());
@@ -417,7 +418,7 @@ final class MovementListener implements Listener {
                 && !isLiquid(world.getType(x, (int) Math.floor(to.getY() + 0.5), z));
     }
 
-    private static boolean isLiquid(Material m) {
+    static boolean isLiquid(Material m) {
         return m == Material.WATER || m == Material.LAVA || m == Material.BUBBLE_COLUMN
                 || m == Material.KELP || m == Material.KELP_PLANT
                 || m == Material.SEAGRASS || m == Material.TALL_SEAGRASS;

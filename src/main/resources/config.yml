@@ -151,6 +151,26 @@ checks:
     # Starting to sprint with 6 food or less, or while blind. Cancelled when flagged.
     impossible-sprint: true
 
+  elytra:
+    # ElytraFly. Gliding only trades height for speed and back, so without a firework, knockback or
+    # riptide a glider cannot climb above where its height and speed could take it, or hover.
+    # Flagged gliders stop gliding.
+    enabled: true
+    # Horizontal blocks per tick without a boost. Diving and pulling up reaches about 3.
+    max-speed: 3.5
+    # Blocks of height a glider may gain beyond its energy, for rounding.
+    climb-margin: 3
+  vehicles:
+    # BoatFly (a boat in the air that does not fall) and EntitySpeed (boats and horses too fast).
+    # Flagged riders are dismounted and the vehicle is moved back. Camels are skipped (their dash).
+    enabled: true
+    # Boat blocks per tick off ice (about 0.4 on water) and on ice (blue ice reaches about 3.6).
+    max-boat-speed: 1.0
+    max-boat-ice-speed: 4.0
+    # A horse moves about 2.1 times its speed attribute per tick.
+    mount-speed-factor: 2.6
+    max-boat-air-moves: 10
+
 grace:
   # Ticks to skip all movement checks after knockback, damage, explosions, or server-applied velocity.
   knockback-ticks: 30
