@@ -46,7 +46,90 @@ record Settings(
         boolean noSlowEnabled,
         FastBreak fastBreak,
         Set<String> disabledAddons,
-        BadPackets badPackets) {
+        BadPackets badPackets,
+        Elytra elytra,
+        Vehicles vehicles,
+        Velocity velocity,
+        boolean phaseEnabled,
+        boolean airPlaceEnabled,
+        Tower tower,
+        Criticals criticals,
+        ChestStealer chestStealer,
+        AutoArmor autoArmor,
+        boolean inventoryMoveEnabled,
+        Aim aim,
+        AutoFish autoFish) {
+
+    /** Reeling in faster after each bite than a person reacts. */
+    record AutoFish(boolean enabled, long minReactionMs, int streak) {
+        static AutoFish from(ConfigurationSection c) {
+            return new AutoFish(c.getBoolean("enabled", true), Math.max(0, c.getLong("min-reaction-ms", 100)),
+                    Math.max(1, c.getInt("streak", 3)));
+        }
+    }
+
+    /** Rotations that are not whole mouse steps: aimbots in combat, bots such as Baritone elsewhere. */
+    record Aim(boolean enabled, int samples, boolean punish) {
+        static Aim from(ConfigurationSection c) {
+            return new Aim(c.getBoolean("enabled", true), Math.max(10, c.getInt("samples", 30)),
+                    c.getBoolean("punish", false));
+        }
+    }
+
+    /** Putting on armor pieces faster than a person can click them. */
+    record AutoArmor(boolean enabled, long minIntervalMs) {
+        static AutoArmor from(ConfigurationSection c) {
+            return new AutoArmor(c.getBoolean("enabled", true), Math.max(0, c.getLong("min-interval-ms", 50)));
+        }
+    }
+
+    /** Taking items out of a chest faster than a person can react to it opening. */
+    record ChestStealer(boolean enabled, long minReactionMs) {
+        static ChestStealer from(ConfigurationSection c) {
+            return new ChestStealer(c.getBoolean("enabled", true), Math.max(0, c.getLong("min-reaction-ms", 50)));
+        }
+    }
+
+    /** Faking a fall to land critical hits while standing on the ground. */
+    record Criticals(boolean enabled, int maxStreak) {
+        static Criticals from(ConfigurationSection c) {
+            return new Criticals(c.getBoolean("enabled", true), Math.max(1, c.getInt("max-streak", 3)));
+        }
+    }
+
+    /** Building a pillar under yourself faster than jumping allows. */
+    record Tower(boolean enabled, int maxPerSecond) {
+        static Tower from(ConfigurationSection c) {
+            return new Tower(c.getBoolean("enabled", true), Math.max(1, c.getInt("max-per-second", 4)));
+        }
+    }
+
+    /** Taking less knockback than the server gave. */
+    record Velocity(boolean enabled, double minRatio, double minKnockback, int failsToFlag) {
+        static Velocity from(ConfigurationSection c) {
+            return new Velocity(c.getBoolean("enabled", true), Math.max(0, Math.min(1, c.getDouble("min-ratio", 0.4))),
+                    Math.max(0.05, c.getDouble("min-knockback", 0.2)), Math.max(1, c.getInt("fails-to-flag", 2)));
+        }
+    }
+
+    /** Boats and horses moving faster than they can, and boats flying. */
+    record Vehicles(boolean enabled, double maxBoatSpeed, double maxBoatIceSpeed, double mountSpeedFactor,
+                    int maxBoatAirMoves) {
+        static Vehicles from(ConfigurationSection c) {
+            return new Vehicles(c.getBoolean("enabled", true), Math.max(0.1, c.getDouble("max-boat-speed", 1.0)),
+                    Math.max(0.1, c.getDouble("max-boat-ice-speed", 4.0)),
+                    Math.max(1, c.getDouble("mount-speed-factor", 2.6)),
+                    Math.max(1, c.getInt("max-boat-air-moves", 10)));
+        }
+    }
+
+    /** Gliding faster, higher or longer than an elytra allows without a boost. */
+    record Elytra(boolean enabled, double maxSpeed, double climbMargin) {
+        static Elytra from(ConfigurationSection c) {
+            return new Elytra(c.getBoolean("enabled", true), Math.max(0.5, c.getDouble("max-speed", 3.5)),
+                    Math.max(0, c.getDouble("climb-margin", 3)));
+        }
+    }
 
     /** Packets a vanilla client never sends, which cheat clients send to spoof or skip things. */
     record BadPackets(boolean invalidRotation, boolean noSwing, boolean impossibleSprint) {
@@ -203,7 +286,19 @@ record Settings(
                 c.getBoolean("checks.noslow.enabled", true),
                 FastBreak.from(section(c, "checks.fastbreak")),
                 lowercase(c.getStringList("addons.disabled")),
-                BadPackets.from(section(c, "checks.badpackets")));
+                BadPackets.from(section(c, "checks.badpackets")),
+                Elytra.from(section(c, "checks.elytra")),
+                Vehicles.from(section(c, "checks.vehicles")),
+                Velocity.from(section(c, "checks.velocity")),
+                c.getBoolean("checks.phase.enabled", true),
+                c.getBoolean("checks.airplace.enabled", true),
+                Tower.from(section(c, "checks.tower")),
+                Criticals.from(section(c, "checks.criticals")),
+                ChestStealer.from(section(c, "checks.cheststealer")),
+                AutoArmor.from(section(c, "checks.autoarmor")),
+                c.getBoolean("checks.inventorymove.enabled", true),
+                Aim.from(section(c, "checks.aim")),
+                AutoFish.from(section(c, "checks.autofish")));
     }
 
     /** Check name to enabled state, in display order. */
@@ -217,6 +312,7 @@ record Settings(
         checks.put("Step", stepEnabled);
         checks.put("NoFall", noFallEnabled);
         checks.put("Timer", timerEnabled);
+        checks.put("Blink", timerEnabled);
         checks.put("Reach", reachEnabled);
         checks.put("Nuker", nuker.enabled());
         checks.put("FastBreak", fastBreak.enabled());
@@ -229,6 +325,20 @@ record Settings(
         checks.put("InvalidRotation", badPackets.invalidRotation());
         checks.put("NoSwing", badPackets.noSwing());
         checks.put("ImpossibleSprint", badPackets.impossibleSprint());
+        checks.put("ElytraFly", elytra.enabled());
+        checks.put("BoatFly", vehicles.enabled());
+        checks.put("EntitySpeed", vehicles.enabled());
+        checks.put("Velocity", velocity.enabled());
+        checks.put("Phase", phaseEnabled);
+        checks.put("AirPlace", airPlaceEnabled);
+        checks.put("Tower", tower.enabled());
+        checks.put("Criticals", criticals.enabled());
+        checks.put("ChestStealer", chestStealer.enabled());
+        checks.put("AutoArmor", autoArmor.enabled());
+        checks.put("InventoryMove", inventoryMoveEnabled);
+        checks.put("Aim", aim.enabled());
+        checks.put("Bot", aim.enabled());
+        checks.put("AutoFish", autoFish.enabled());
         return checks;
     }
 }

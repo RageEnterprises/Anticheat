@@ -151,6 +151,93 @@ checks:
     # Starting to sprint with 6 food or less, or while blind. Cancelled when flagged.
     impossible-sprint: true
 
+  elytra:
+    # ElytraFly. Gliding only trades height for speed and back, so without a firework, knockback or
+    # riptide a glider cannot climb above where its height and speed could take it, or hover.
+    # Flagged gliders stop gliding.
+    enabled: true
+    # Horizontal blocks per tick without a boost. Diving and pulling up reaches about 3.
+    max-speed: 3.5
+    # Blocks of height a glider may gain beyond its energy, for rounding.
+    climb-margin: 3
+  vehicles:
+    # BoatFly (a boat in the air that does not fall) and EntitySpeed (boats and horses too fast).
+    # Flagged riders are dismounted and the vehicle is moved back. Camels are skipped (their dash).
+    enabled: true
+    # Boat blocks per tick off ice (about 0.4 on water) and on ice (blue ice reaches about 3.6).
+    max-boat-speed: 1.0
+    max-boat-ice-speed: 4.0
+    # A horse moves about 2.1 times its speed attribute per tick.
+    mount-speed-factor: 2.6
+    max-boat-air-moves: 10
+
+  velocity:
+    # Anti-knockback. After knockback, the player's moves must cover min-ratio of the distance the
+    # knockback carries a player, measured until their ping plus 6 ticks. Players next to walls, in
+    # liquid, cobwebs, vehicles or gliding are skipped.
+    enabled: true
+    min-ratio: 0.4
+    # Knockback weaker than this (blocks per tick) is not measured.
+    min-knockback: 0.2
+    # Failed knockbacks in a row before a flag, so one lag spike does not count.
+    fails-to-flag: 2
+
+  phase:
+    # Moving into solid blocks (Phase, NoClip). Paper already refuses most such moves ("moved
+    # wrongly"); this flags the ones that get through. Uses a slightly smaller box than the player.
+    enabled: true
+
+  airplace:
+    # Placing a block against air. Every vanilla placement clicks an existing block. Cancelled.
+    enabled: true
+  tower:
+    # Stacking blocks under yourself (a pillar) faster than jumping allows. Cancelled.
+    enabled: true
+    # Jumping and placing manages about 2.5 a second.
+    max-per-second: 4
+
+  criticals:
+    # Critical hits from a faked fall: the client claims to be falling while standing on the ground
+    # without having jumped (knockback counts as a jump). Flagged hits are cancelled.
+    enabled: true
+    # Such hits in a row that are allowed. Stepping off a slab causes one now and then.
+    max-streak: 3
+
+  cheststealer:
+    # Taking an item out of a chest, barrel, shulker box or ender chest sooner after it opened than
+    # a person can react, minus the ping. Only the first click is timed. Cancelled.
+    enabled: true
+    # A person needs at least 150 ms to see the chest and click an item.
+    min-reaction-ms: 50
+  autoarmor:
+    # Three armor pieces put on with less than min-interval-ms between them. Cancelled.
+    enabled: true
+    # Moving the mouse to the next piece and clicking takes a person about 100 ms.
+    min-interval-ms: 50
+
+  inventorymove:
+    # Clicking in an inventory while walking or sprinting. The vanilla client lets go of the
+    # movement keys when a screen opens. Skipped on ice, in liquids, vehicles and after knockback.
+    # Two such clicks within a second flag, and the click is cancelled.
+    enabled: true
+
+  aim:
+    # Mouse input turns the camera in whole steps of the player's sensitivity; aimbots and bots
+    # (Baritone) compute rotations that are not. Reported as Aim within 3 seconds of an attack and
+    # as Bot otherwise, at most once per 30 seconds per player.
+    enabled: true
+    # Pitch changes collected before each judgement.
+    samples: 30
+    # Cinematic camera and some zoom mods also smooth the camera, so this only alerts staff unless true.
+    punish: false
+
+  autofish:
+    # Reeling in sooner after a fish bites than a person reacts (about 200 ms), minus the ping,
+    # several catches in a row. The flagged catch is cancelled.
+    enabled: true
+    min-reaction-ms: 100
+    streak: 3
+
 grace:
   # Ticks to skip all movement checks after knockback, damage, explosions, or server-applied velocity.
   knockback-ticks: 30

@@ -1,7 +1,9 @@
 package dev.rage.anticheat;
 
+import dev.rage.anticheat.logic.AimGcd;
 import dev.rage.anticheat.logic.ClickStats;
 import dev.rage.anticheat.logic.EventWindow;
+import dev.rage.anticheat.logic.KnockbackRun;
 import dev.rage.anticheat.logic.SpeedTracker;
 import dev.rage.anticheat.logic.TargetTracker;
 import dev.rage.anticheat.logic.TimerBalance;
@@ -25,6 +27,11 @@ final class PlayerData {
     boolean wasGrounded = true;
     double lastMovementSpeed;
     int lastMoveTick;
+    /** Timer and Blink: the last move, and the last silence of more than half a second. */
+    long lastPacketNanos;
+    long lastGapNanos = Long.MIN_VALUE / 2;
+    /** Horizontal blocks per tick of the last move. */
+    double lastSpeed;
     int airborneTicks;
     int jesusTicks;
     int noFallTicks;
@@ -32,6 +39,32 @@ final class PlayerData {
     int exemptUntil;
     /** Server tick until which the vertical checks are skipped (water, ladders, levitation, bounces). */
     int flightGraceUntil;
+
+    /** Server tick until which knockback, damage or explosions may move the player. Unlike exemptUntil, gliding and riding do not extend it. */
+    int knockbackUntil;
+
+    /** ElytraFly: highest height-plus-speed energy since the glide or last boost, and boost state. */
+    double glidePeak = Double.NaN;
+    int glideLastTick;
+    int glideBoostUntil;
+    /** Where the player was gliding a second ago, for hovering. */
+    Location glideHover;
+
+    /** BoatFly and EntitySpeed: the vehicle's last position and how long it has hung in the air. */
+    double vehicleX;
+    double vehicleY;
+    double vehicleZ;
+    int vehicleTick = -1;
+    int vehicleAirMoves;
+
+    /** Velocity: movement along the last knockback, which knockback it is, and failures in a row. */
+    final KnockbackRun knockback = new KnockbackRun();
+    int knockbackId;
+    int velocityFails;
+
+    /** Criticals: the last real jump, and hits in a row with a faked fall. */
+    int lastJumpTick = Integer.MIN_VALUE / 2;
+    int critStreak;
 
     private World safeWorld;
     private double safeX;
@@ -54,11 +87,13 @@ final class PlayerData {
         speed = new SpeedTracker(s.speedSamples());
         breaks = new EventWindow(s.nuker().maxPerSecond() + 1);
         places = new EventWindow(s.scaffold().maxPerSecond() + 1);
+        towerPlaces = new EventWindow(s.tower().maxPerSecond() + 1);
         placeMisses = new EventWindow(s.scaffold().maxMisses() + 1);
         attackMisses = new EventWindow(s.killAura().maxMisses() + 1);
         attackTargets = new TargetTracker(s.killAura().maxTargets() + 1);
         crystalBreaks = new EventWindow(s.crystal().maxBreaksPerSecond() + 1);
         crystalPlaces = new EventWindow(s.crystal().maxPlacesPerSecond() + 1);
+        aim = new AimGcd(s.aim().samples());
         clicks = new ClickStats(Math.max(s.autoClicker().samples(), s.autoClicker().maxCps()) + 2);
     }
 
@@ -77,6 +112,23 @@ final class PlayerData {
     /** The last change to food or potion effects, which the client learns a ping later, for ImpossibleSprint. */
     long sprintStateNanos = Long.MIN_VALUE / 2;
 
+    /** When the open container was opened (0 when its first click was seen), for ChestStealer. */
+    long containerOpenNanos;
+    /** Aim and Bot: recent pitch changes, the last attack, and the last alert. */
+    final AimGcd aim;
+    long lastAttackNanos = Long.MIN_VALUE / 2;
+    long aimAlertNanos = Long.MIN_VALUE / 2;
+
+    /** AutoFish: when a fish bit (0 if none is waiting), and quick catches in a row. */
+    long biteNanos;
+    int quickCatches;
+
+    /** Inventory clicks while walking, for InventoryMove. */
+    final EventWindow movingClicks = new EventWindow(2);
+    /** The last armor piece put on, and quick ones in a row, for AutoArmor. */
+    long lastArmorNanos = Long.MIN_VALUE / 2;
+    int quickArmor;
+
     /** When the last totem of undying popped, for AutoTotem. */
     long totemPopNanos = Long.MIN_VALUE / 2;
 
@@ -87,6 +139,9 @@ final class PlayerData {
     /** Blocks placed recently, and placements against a face the player was not looking at, for Scaffold. */
     final EventWindow places;
     final EventWindow placeMisses;
+    /** Blocks stacked under the player recently, and the height of the last, for Tower. */
+    final EventWindow towerPlaces;
+    int lastTowerY = Integer.MIN_VALUE;
 
     void setSafe(Location loc) {
         safeWorld = loc.getWorld();
@@ -111,5 +166,7 @@ final class PlayerData {
         jesusTicks = 0;
         noFallTicks = 0;
         speed.reset();
+        knockback.stop();
+        aim.reset();
     }
 }

@@ -141,17 +141,48 @@ final class BlockListener implements Listener {
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onPlace(BlockPlaceEvent event) {
         Player player = event.getPlayer();
-        Settings s = plugin.settings();
-        if (!s.scaffold().enabled() || player.getGameMode() == GameMode.CREATIVE
-                || player.hasPermission(MovementListener.BYPASS)) {
+        if (player.getGameMode() == GameMode.CREATIVE || player.hasPermission(MovementListener.BYPASS)) {
             return;
         }
+        Settings s = plugin.settings();
         PlayerData d = plugin.data(player);
-        String details = scaffold(player, d, s.scaffold(), event.getBlockPlaced(), event.getBlockAgainst());
+        Block placed = event.getBlockPlaced();
+        String check = "AirPlace";
+        // Every vanilla placement clicks the face of an existing block.
+        String details = s.airPlaceEnabled() && event.getBlockAgainst().getType().isAir()
+                ? "placed a block against air" : null;
+        if (details == null && s.tower().enabled() && !player.isFlying()) {
+            check = "Tower";
+            details = tower(player, d, s.tower(), placed);
+        }
+        if (details == null && s.scaffold().enabled()) {
+            check = "Scaffold";
+            details = scaffold(player, d, s.scaffold(), placed, event.getBlockAgainst());
+        }
         if (details != null) {
             event.setCancelled(true);
-            plugin.flag(player, d, "Scaffold", details);
+            plugin.flag(player, d, check, details);
         }
+    }
+
+    /**
+     * Jumping and placing a block underneath at the top of each jump stacks about 2.5 blocks a
+     * second. Tower cheats stack one every few ticks.
+     */
+    private static String tower(Player player, PlayerData d, Settings.Tower t, Block placed) {
+        Location at = player.getLocation();
+        boolean underneath = placed.getY() == (int) Math.floor(at.getY() - 0.5)
+                && Math.abs(placed.getX() + 0.5 - at.getX()) < 0.8 && Math.abs(placed.getZ() + 0.5 - at.getZ()) < 0.8;
+        if (!underneath) {
+            return null;
+        }
+        if (placed.getY() != d.lastTowerY + 1) {
+            d.towerPlaces.clear();
+        }
+        d.lastTowerY = placed.getY();
+        int perSecond = d.towerPlaces.record(Bukkit.getCurrentTick(), 20);
+        return perSecond > t.maxPerSecond()
+                ? perSecond + " blocks stacked under the player in one second, max " + t.maxPerSecond() : null;
     }
 
     /**

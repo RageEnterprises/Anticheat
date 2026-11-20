@@ -56,6 +56,14 @@ final class MovementListener implements Listener {
     private static final double EXPLOSION_GRACE_RADIUS = 8;
     private static final int MAX_MERGED_TICKS = 20;
     private static final int MIN_USE_TICKS = 3;
+    /** A silence this long before a Timer burst makes it Blink. */
+    private static final long BLINK_GAP_NANOS = 500_000_000L;
+    private static final long BLINK_BURST_NANOS = 2_000_000_000L;
+    /** A jump rises 0.42 in its first tick; fake critical hops rise far less. */
+    private static final double JUMP_DY = 0.2;
+    /** Phase tests a box this much smaller than the player on every side. */
+    private static final double PHASE_HALF_WIDTH = 0.2;
+    private static final double PHASE_INSET = 0.15;
 
     private record Flag(String check, String details) {
     }
@@ -102,6 +110,7 @@ final class MovementListener implements Listener {
         // Paper skips events for moves under 1/16 block, so one event can cover several ticks.
         int ticks = Math.max(1, Math.min(MAX_MERGED_TICKS, now - d.lastMoveTick));
         d.lastMoveTick = now;
+        d.lastSpeed = horizontal / ticks;
         Flag speed = checkSpeed(player, d, s, world, from, to, horizontal, ticks, dy, fromGrounded, grounded,
                 inLiquid, exempt);
         if (exempt) {
@@ -113,10 +122,15 @@ final class MovementListener implements Listener {
             Flag jesus = checkJesus(player, d, s, world, to, dy, grounded);
             Flag step = checkStep(player, s, dy, fromGrounded, grounded);
             Flag noFall = checkNoFall(player, d, s, dy, grounded, inLiquid, slowed, now);
-            flag = flag != null ? flag : vertical != null ? vertical : jesus != null ? jesus : step != null ? step : noFall;
+            Flag phase = checkPhase(player, d, s, world, from, to);
+            flag = flag != null ? flag : phase != null ? phase : vertical != null ? vertical : jesus != null ? jesus
+                    : step != null ? step : noFall;
         }
         if (flag == null) {
             flag = speed;
+        }
+        if (dy > JUMP_DY) {
+            d.lastJumpTick = now;
         }
         d.lastDy = dy;
         d.wasGrounded = grounded;
@@ -276,12 +290,53 @@ final class MovementListener implements Listener {
                 d.noFallTicks, dy));
     }
 
-    /** More movement packets than real time allows. */
+    /**
+     * Moving into solid blocks. The box is a little smaller than the player so touching walls,
+     * stepping onto slabs and crouching under ledges do not count, and blocks whose collision
+     * depends on the player (scaffolding, powder snow) or that move (pistons) are skipped.
+     */
+    private static Flag checkPhase(Player p, PlayerData d, Settings s, World world, Location from, Location to) {
+        if (!s.phaseEnabled()) {
+            return null;
+        }
+        double height = p.getPose() == Pose.STANDING ? PLAYER_HEIGHT : p.getPose() == Pose.SNEAKING ? 1.5 : 0;
+        if (height == 0
+                || !collides(world, d.scratch, to.getX(), to.getY() + PHASE_INSET, to.getZ(), PHASE_HALF_WIDTH,
+                        height - 2 * PHASE_INSET)
+                || collides(world, d.scratch, from.getX(), from.getY() + PHASE_INSET, from.getZ(), PHASE_HALF_WIDTH,
+                        height - 2 * PHASE_INSET)
+                || nearChangingBlock(world, to, height)) {
+            return null;
+        }
+        Material inside = world.getType(to.getBlockX(), (int) Math.floor(to.getY() + 0.5), to.getBlockZ());
+        return new Flag("Phase", "moved into " + inside.name().toLowerCase(java.util.Locale.ROOT));
+    }
+
+    private static boolean nearChangingBlock(World world, Location at, double height) {
+        for (int bx = (int) Math.floor(at.getX() - 0.5); bx <= (int) Math.floor(at.getX() + 0.5); bx++) {
+            for (int bz = (int) Math.floor(at.getZ() - 0.5); bz <= (int) Math.floor(at.getZ() + 0.5); bz++) {
+                for (int by = (int) Math.floor(at.getY()) - 1; by <= (int) Math.floor(at.getY() + height); by++) {
+                    Material m = world.getType(bx, by, bz);
+                    if (m == Material.SCAFFOLDING || m == Material.POWDER_SNOW || m == Material.MOVING_PISTON
+                            || m == Material.PISTON_HEAD) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    /** More movement packets than real time allows (Timer), or a burst of held-back ones (Blink). */
     private Flag checkTimer(PlayerData d, Settings s, boolean exempt) {
         if (!s.timerEnabled()) {
             return null;
         }
         long nanos = System.nanoTime();
+        if (nanos - d.lastPacketNanos > BLINK_GAP_NANOS) {
+            d.lastGapNanos = nanos;
+        }
+        d.lastPacketNanos = nanos;
         if (exempt || plugin.serverLagging(nanos)) {
             d.timer.reset();
             return null;
@@ -291,6 +346,10 @@ final class MovementListener implements Listener {
             return null;
         }
         d.timer.afterFlag(s.timerMaxAheadMs());
+        // Blink holds moves back and then sends them all at once: a silence, then a burst.
+        if (nanos - d.lastGapNanos < BLINK_BURST_NANOS) {
+            return new Flag("Blink", String.format("sent %.0f ms of held-back moves at once after going silent", ahead));
+        }
         return new Flag("Timer", String.format("%.0f ms ahead of real time", ahead));
     }
 
@@ -323,6 +382,7 @@ final class MovementListener implements Listener {
         PlayerData d = plugin.data(player);
         int until = Bukkit.getCurrentTick() + plugin.settings().knockbackGraceTicks();
         d.exemptUntil = Math.max(d.exemptUntil, until);
+        d.knockbackUntil = Math.max(d.knockbackUntil, until);
     }
 
     // --- World queries. Block lookups use World#getType so the common all-air case does not allocate. ---
@@ -331,7 +391,7 @@ final class MovementListener implements Listener {
      * True when the box centred on x/z, from y up by {@code height}, overlaps any block collision shape.
      * One extra layer below is scanned because fences and walls reach 0.5 above their own block.
      */
-    private static boolean collides(World world, BoundingBox box, double x, double y, double z,
+    static boolean collides(World world, BoundingBox box, double x, double y, double z,
                                     double halfWidth, double height) {
         box.resize(x - halfWidth, y, z - halfWidth, x + halfWidth, y + height, z + halfWidth);
         int minX = (int) Math.floor(box.getMinX());
@@ -359,7 +419,7 @@ final class MovementListener implements Listener {
     }
 
     /** Highest (or lowest) slipperiness of the blocks under the player's feet. */
-    private static double slipperinessBelow(World world, Location loc, boolean highest) {
+    static double slipperinessBelow(World world, Location loc, boolean highest) {
         int y = (int) Math.floor(loc.getY() - 0.5000001);
         double result = MovePhysics.DEFAULT_SLIPPERINESS;
         boolean found = false;
@@ -417,7 +477,7 @@ final class MovementListener implements Listener {
                 && !isLiquid(world.getType(x, (int) Math.floor(to.getY() + 0.5), z));
     }
 
-    private static boolean isLiquid(Material m) {
+    static boolean isLiquid(Material m) {
         return m == Material.WATER || m == Material.LAVA || m == Material.BUBBLE_COLUMN
                 || m == Material.KELP || m == Material.KELP_PLANT
                 || m == Material.SEAGRASS || m == Material.TALL_SEAGRASS;

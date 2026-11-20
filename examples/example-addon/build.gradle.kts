@@ -15,7 +15,7 @@ repositories {
 
 dependencies {
     compileOnly("io.papermc.paper:paper-api:1.20.4-R0.1-SNAPSHOT")
-    // In your own project: compileOnly("com.github.RageEnterprises:Anticheat:v2.2.0")
+    // In your own project: compileOnly("com.github.RageEnterprises:Anticheat:v2.3.0")
     compileOnly(project(":"))
 }
 
