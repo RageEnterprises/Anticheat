@@ -79,6 +79,15 @@ frozen-logout-reason: "Logged out while frozen"
 discord-freeze-title: "Logged out while frozen"
 usage-freeze: 'Usage: /freeze \<player>'
 
+# Alts. {player} {count} {alts}
+alts-join: "<#ffc2c2>{player}</#ffc2c2> shares an IP with {count} account(s): <#ffc2c2>{alts}</#ffc2c2>"
+alts-list: "Accounts sharing an IP with <#ffc2c2>{player}</#ffc2c2> ({count}): <#ffc2c2>{alts}</#ffc2c2>"
+alts-none: "<#ffc2c2>{player}</#ffc2c2> has no known alts."
+alt-banned-screen: "<bold><gradient:#7a0000:#ff2a2a>RAGE</gradient></bold>\n\n<#ff6b6b>Your connection is linked to a banned account.</#ff6b6b>\n\n<#8a8a8a>If you think this is a mistake, contact the staff team.</#8a8a8a>"
+alt-banned-alert: "<#ffc2c2>{player}</#ffc2c2> was refused: shares an IP with banned account <#ffc2c2>{alts}</#ffc2c2>."
+discord-alts-title: "Alt accounts detected"
+usage-alts: 'Usage: /alts \<player>'
+
 # Crash exploits. {player} {check} {details}
 exploit-alert: "<#ffc2c2>{player}</#ffc2c2> attempted a <#ffc2c2>{check}</#ffc2c2>: {details}"
 exploit-reason: "Crash exploit attempt ({check})"

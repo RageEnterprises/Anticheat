@@ -145,6 +145,15 @@ moderation:
   # Commands muted players cannot use, so they cannot get around a mute with private messages.
   muted-blocked-commands: [msg, tell, w, whisper, me, r, reply, say, m, t]
 
+alts:
+  # Link accounts that have joined from the same IP.
+  enabled: true
+  # Tell staff (and the Discord webhook "joins" event) when a player with alts joins.
+  notify-staff: true
+  # Refuse to let a player join from an IP that a banned account has used (ban evasion).
+  # Off by default: families, schools and public Wi-Fi share IPs.
+  block-banned-alts: false
+
 freeze:
   # Commands a frozen player may still use, e.g. to talk to staff.
   allowed-commands: [msg, tell, r, reply]

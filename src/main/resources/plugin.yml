@@ -44,6 +44,9 @@ commands:
     description: Freeze or unfreeze a player.
     usage: /freeze <player>
     aliases: [ss, unfreeze]
+  alts:
+    description: List accounts that share an IP with a player.
+    usage: /alts <player>
   history:
     description: Show a player's punishment history.
     usage: /history <player>
@@ -75,6 +78,7 @@ permissions:
       rageanticheat.mod.clearchat: true
       rageanticheat.mod.history: true
       rageanticheat.mod.freeze: true
+      rageanticheat.mod.alts: true
   rageanticheat.mod.exempt:
     description: Cannot be punished by other players (the console still can).
     default: false

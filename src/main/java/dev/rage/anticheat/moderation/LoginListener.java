@@ -20,10 +20,12 @@ public final class LoginListener implements Listener {
 
     private final RageAnticheat plugin;
     private final Moderation moderation;
+    private final Alts alts;
 
-    public LoginListener(RageAnticheat plugin, Moderation moderation) {
+    public LoginListener(RageAnticheat plugin, Moderation moderation, Alts alts) {
         this.plugin = plugin;
         this.moderation = moderation;
+        this.alts = alts;
     }
 
     @EventHandler(priority = EventPriority.HIGH)
@@ -39,6 +41,18 @@ public final class LoginListener implements Listener {
                 event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_BANNED, moderation.banScreen(ban));
                 return;
             }
+            if (plugin.getConfig().getBoolean("alts.enabled", true)
+                    && plugin.getConfig().getBoolean("alts.block-banned-alts", false)) {
+                PlayerRecord banned = alts.bannedAccountOnIp(event.getAddress().getHostAddress(), uuid);
+                if (banned != null) {
+                    String[] placeholders = {"player", event.getName(), "alts", banned.name()};
+                    event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_BANNED,
+                            plugin.messages().screen("alt-banned-screen", placeholders));
+                    plugin.getServer().getScheduler().runTask(plugin, () ->
+                            plugin.broadcastStaff(plugin.messages().get("alt-banned-alert", placeholders)));
+                    return;
+                }
+            }
             moderation.cacheMute(uuid,
                     plugin.database().call(c -> PunishmentStore.active(c, uuid, Punishment.Type.MUTE, now)));
         } catch (RuntimeException e) {
@@ -53,6 +67,9 @@ public final class LoginListener implements Listener {
         String ip = ip(player);
         long now = System.currentTimeMillis();
         plugin.database().submit(c -> PlayerStore.recordJoin(c, player.getUniqueId(), player.getName(), ip, now));
+        if (plugin.getConfig().getBoolean("alts.enabled", true)) {
+            alts.notifyStaff(player); // queued after the join record, so this IP is included
+        }
     }
 
     @EventHandler(priority = EventPriority.MONITOR)

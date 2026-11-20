@@ -68,6 +68,30 @@ public final class PlayerStore {
         }
     }
 
+    /** Other accounts that have used any IP this player has used. */
+    public static List<PlayerRecord> alts(Connection c, UUID uuid) throws SQLException {
+        try (PreparedStatement ps = c.prepareStatement("""
+                SELECT DISTINCT p.* FROM player_ips mine
+                JOIN player_ips other ON other.ip = mine.ip AND other.uuid != mine.uuid
+                JOIN players p ON p.uuid = other.uuid
+                WHERE mine.uuid = ? AND mine.ip != 'unknown'
+                ORDER BY p.last_join DESC LIMIT 50""")) {
+            ps.setString(1, uuid.toString());
+            return list(ps);
+        }
+    }
+
+    /** Accounts other than {@code uuid} that have joined from this IP. */
+    public static List<PlayerRecord> accountsOnIp(Connection c, String ip, UUID uuid) throws SQLException {
+        try (PreparedStatement ps = c.prepareStatement("""
+                SELECT p.* FROM player_ips i JOIN players p ON p.uuid = i.uuid
+                WHERE i.ip = ? AND i.uuid != ? ORDER BY p.last_join DESC LIMIT 50""")) {
+            ps.setString(1, ip);
+            ps.setString(2, uuid.toString());
+            return list(ps);
+        }
+    }
+
     public static void recordFlag(Connection c, UUID uuid, String check, String details, long now) throws SQLException {
         try (PreparedStatement ps = c.prepareStatement(
                 "INSERT INTO flags (uuid, check_name, details, time) VALUES (?, ?, ?, ?)")) {
