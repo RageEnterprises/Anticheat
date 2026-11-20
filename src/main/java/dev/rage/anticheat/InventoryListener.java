@@ -1,5 +1,6 @@
 package dev.rage.anticheat;
 
+import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -38,6 +39,9 @@ final class InventoryListener implements Listener {
     private static final long POP_WINDOW_NANOS = 3_000_000_000L;
     /** Quick armor pieces in a row that flag: three pieces with two quick gaps. */
     private static final int QUICK_ARMOR_TO_FLAG = 2;
+    /** Walking is 0.22 blocks per tick; a player who let go of the keys is below this within 2 ticks. */
+    private static final double WALKING_SPEED = 0.18;
+    private static final double MIN_SPRINT_CLICK_SPEED = 0.1;
 
     private record Flag(String check, String details) {
     }
@@ -87,6 +91,9 @@ final class InventoryListener implements Listener {
         }
         if (flag == null && s.autoArmor().enabled()) {
             flag = autoArmor(event, player, d, s.autoArmor(), now, lagging);
+        }
+        if (flag == null && s.inventoryMoveEnabled() && !lagging) {
+            flag = inventoryMove(player, d);
         }
         if (flag != null) {
             event.setCancelled(true);
@@ -149,6 +156,29 @@ final class InventoryListener implements Listener {
         d.quickArmor = 0;
         return new Flag("AutoArmor", String.format("put on %d armor pieces less than %d ms apart",
                 QUICK_ARMOR_TO_FLAG + 1, a.minIntervalMs()));
+    }
+
+    /**
+     * The vanilla client releases the movement keys when a screen opens, so a player stops within
+     * a few ticks, long before they can click. Walking or sprinting at a click means the inventory
+     * was used without a screen, or with movement kept on. Ice, liquids, knockback and vehicles
+     * keep players moving on their own, so they are skipped. Two such clicks within a second flag.
+     */
+    private static Flag inventoryMove(Player player, PlayerData d) {
+        int tick = Bukkit.getCurrentTick();
+        boolean moving = tick - d.lastMoveTick <= 2 && (d.lastSpeed > WALKING_SPEED
+                || (player.isSprinting() && d.lastSpeed > MIN_SPRINT_CLICK_SPEED));
+        if (!moving || !d.wasGrounded || tick < d.exemptUntil || tick < d.knockbackUntil || player.isInWater()
+                || player.isInLava() || player.isInsideVehicle()
+                || MovementListener.slipperinessBelow(player.getWorld(), player.getLocation(), true) > 0.6) {
+            return null;
+        }
+        if (d.movingClicks.record(tick, 20) < 2) {
+            return null;
+        }
+        d.movingClicks.clear();
+        return new Flag("InventoryMove", String.format("clicked in an inventory while %s at %.2f blocks per tick",
+                player.isSprinting() ? "sprinting" : "walking", d.lastSpeed));
     }
 
     /** True if this click puts a piece of armor (or an elytra) into an empty armor slot. */

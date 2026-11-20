@@ -215,6 +215,12 @@ checks:
     # Moving the mouse to the next piece and clicking takes a person about 100 ms.
     min-interval-ms: 50
 
+  inventorymove:
+    # Clicking in an inventory while walking or sprinting. The vanilla client lets go of the
+    # movement keys when a screen opens. Skipped on ice, in liquids, vehicles and after knockback.
+    # Two such clicks within a second flag, and the click is cancelled.
+    enabled: true
+
 grace:
   # Ticks to skip all movement checks after knockback, damage, explosions, or server-applied velocity.
   knockback-ticks: 30

@@ -107,6 +107,7 @@ final class MovementListener implements Listener {
         // Paper skips events for moves under 1/16 block, so one event can cover several ticks.
         int ticks = Math.max(1, Math.min(MAX_MERGED_TICKS, now - d.lastMoveTick));
         d.lastMoveTick = now;
+        d.lastSpeed = horizontal / ticks;
         Flag speed = checkSpeed(player, d, s, world, from, to, horizontal, ticks, dy, fromGrounded, grounded,
                 inLiquid, exempt);
         if (exempt) {
@@ -407,7 +408,7 @@ final class MovementListener implements Listener {
     }
 
     /** Highest (or lowest) slipperiness of the blocks under the player's feet. */
-    private static double slipperinessBelow(World world, Location loc, boolean highest) {
+    static double slipperinessBelow(World world, Location loc, boolean highest) {
         int y = (int) Math.floor(loc.getY() - 0.5000001);
         double result = MovePhysics.DEFAULT_SLIPPERINESS;
         boolean found = false;

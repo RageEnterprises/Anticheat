@@ -26,6 +26,8 @@ final class PlayerData {
     boolean wasGrounded = true;
     double lastMovementSpeed;
     int lastMoveTick;
+    /** Horizontal blocks per tick of the last move. */
+    double lastSpeed;
     int airborneTicks;
     int jesusTicks;
     int noFallTicks;
@@ -107,6 +109,8 @@ final class PlayerData {
 
     /** When the open container was opened (0 when its first click was seen), for ChestStealer. */
     long containerOpenNanos;
+    /** Inventory clicks while walking, for InventoryMove. */
+    final EventWindow movingClicks = new EventWindow(2);
     /** The last armor piece put on, and quick ones in a row, for AutoArmor. */
     long lastArmorNanos = Long.MIN_VALUE / 2;
     int quickArmor;

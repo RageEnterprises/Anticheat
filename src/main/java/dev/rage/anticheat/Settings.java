@@ -55,7 +55,8 @@ record Settings(
         Tower tower,
         Criticals criticals,
         ChestStealer chestStealer,
-        AutoArmor autoArmor) {
+        AutoArmor autoArmor,
+        boolean inventoryMoveEnabled) {
 
     /** Putting on armor pieces faster than a person can click them. */
     record AutoArmor(boolean enabled, long minIntervalMs) {
@@ -276,7 +277,8 @@ record Settings(
                 Tower.from(section(c, "checks.tower")),
                 Criticals.from(section(c, "checks.criticals")),
                 ChestStealer.from(section(c, "checks.cheststealer")),
-                AutoArmor.from(section(c, "checks.autoarmor")));
+                AutoArmor.from(section(c, "checks.autoarmor")),
+                c.getBoolean("checks.inventorymove.enabled", true));
     }
 
     /** Check name to enabled state, in display order. */
@@ -312,6 +314,7 @@ record Settings(
         checks.put("Criticals", criticals.enabled());
         checks.put("ChestStealer", chestStealer.enabled());
         checks.put("AutoArmor", autoArmor.enabled());
+        checks.put("InventoryMove", inventoryMoveEnabled);
         return checks;
     }
 }
