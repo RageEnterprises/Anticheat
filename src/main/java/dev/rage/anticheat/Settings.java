@@ -312,6 +312,7 @@ record Settings(
         checks.put("Step", stepEnabled);
         checks.put("NoFall", noFallEnabled);
         checks.put("Timer", timerEnabled);
+        checks.put("Blink", timerEnabled);
         checks.put("Reach", reachEnabled);
         checks.put("Nuker", nuker.enabled());
         checks.put("FastBreak", fastBreak.enabled());

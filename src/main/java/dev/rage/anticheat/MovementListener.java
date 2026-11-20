@@ -56,6 +56,9 @@ final class MovementListener implements Listener {
     private static final double EXPLOSION_GRACE_RADIUS = 8;
     private static final int MAX_MERGED_TICKS = 20;
     private static final int MIN_USE_TICKS = 3;
+    /** A silence this long before a Timer burst makes it Blink. */
+    private static final long BLINK_GAP_NANOS = 500_000_000L;
+    private static final long BLINK_BURST_NANOS = 2_000_000_000L;
     /** A jump rises 0.42 in its first tick; fake critical hops rise far less. */
     private static final double JUMP_DY = 0.2;
     /** Phase tests a box this much smaller than the player on every side. */
@@ -324,12 +327,16 @@ final class MovementListener implements Listener {
         return false;
     }
 
-    /** More movement packets than real time allows. */
+    /** More movement packets than real time allows (Timer), or a burst of held-back ones (Blink). */
     private Flag checkTimer(PlayerData d, Settings s, boolean exempt) {
         if (!s.timerEnabled()) {
             return null;
         }
         long nanos = System.nanoTime();
+        if (nanos - d.lastPacketNanos > BLINK_GAP_NANOS) {
+            d.lastGapNanos = nanos;
+        }
+        d.lastPacketNanos = nanos;
         if (exempt || plugin.serverLagging(nanos)) {
             d.timer.reset();
             return null;
@@ -339,6 +346,10 @@ final class MovementListener implements Listener {
             return null;
         }
         d.timer.afterFlag(s.timerMaxAheadMs());
+        // Blink holds moves back and then sends them all at once: a silence, then a burst.
+        if (nanos - d.lastGapNanos < BLINK_BURST_NANOS) {
+            return new Flag("Blink", String.format("sent %.0f ms of held-back moves at once after going silent", ahead));
+        }
         return new Flag("Timer", String.format("%.0f ms ahead of real time", ahead));
     }
 

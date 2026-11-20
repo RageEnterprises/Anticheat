@@ -27,6 +27,9 @@ final class PlayerData {
     boolean wasGrounded = true;
     double lastMovementSpeed;
     int lastMoveTick;
+    /** Timer and Blink: the last move, and the last silence of more than half a second. */
+    long lastPacketNanos;
+    long lastGapNanos = Long.MIN_VALUE / 2;
     /** Horizontal blocks per tick of the last move. */
     double lastSpeed;
     int airborneTicks;
