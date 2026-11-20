@@ -4,7 +4,7 @@
 
 **An open-source anti-cheat and moderation suite for Paper servers.**
 
-One plugin catches movement, combat and block cheats, blocks crash exploits, and gives your staff bans, mutes, freezes, player profiles, alt detection, anti-VPN, anti-bot and a Discord bot.
+One plugin catches movement, combat, block and inventory cheats, blocks crash exploits and cheat clients, and gives your staff bans, mutes, freezes, chat anti-spam, maintenance mode, player profiles, alt detection, anti-VPN, anti-bot and a Discord bot.
 
 [![Paper 1.20+](https://img.shields.io/badge/Paper-1.20%2B-b22222)](https://papermc.io)
 [![Java 17+](https://img.shields.io/badge/Java-17%2B-8b0000)](https://adoptium.net)
@@ -44,6 +44,11 @@ One plugin catches movement, combat and block cheats, blocks crash exploits, and
 | **Nuker** | Breaking blocks too fast, too far away, or outside the view | Break cancelled |
 | **Scaffold** | Placing blocks against faces the player isn't looking at | Place cancelled |
 | **Xray** | Mining far more hidden ores per stone than normal | Staff alert (or violation) |
+| **NoSlow** | Moving at full speed while eating, blocking or drawing a bow | Setback |
+| **FastBreak** | Mining blocks faster than the tool and effects allow | Break cancelled |
+| **AutoClicker** | Clicking faster than people can, or at a machine-even rhythm | Violation |
+| **CrystalAura** | Breaking end crystals before the client could see them, or too many per second | Hit or place cancelled |
+| **AutoTotem** | Refilling the off-hand totem faster than a person can react | Refill cancelled |
 
 Each violation:
 
@@ -62,6 +67,9 @@ When the level reaches the limit, the player is **kicked or banned**, depending 
 | **Anti-bot** | Limits accounts per IP. During a join flood it turns on attack mode, in which only returning players can join. |
 | **Anti-VPN** | Optionally refuses VPN and proxy connections (via proxycheck.io), with an allow-list. |
 | **Alt detection** | Links accounts by shared IP, alerts staff when a player with alts joins, and can block alts of banned players. |
+| **Client mods** | Refuses clients whose brand or plugin channels name a blocked mod (Wurst, Meteor, Baritone and more), or every modded client with `vanilla-only`. |
+| **Chat anti-spam** | Blocks messages sent too fast or repeated, and mutes players who keep spamming. |
+| **Maintenance mode** | `/maintenance on` lets only ops and whitelisted players join, and the server list shows "Maintenance" instead of the ping bars. |
 
 ### Moderation
 
@@ -102,6 +110,7 @@ When the level reaches the limit, the player is **kicked or banned**, depending 
 | `/profile <player>` | `rageanticheat.mod.profile` | Show the player's profile. |
 | `/history <player>` | `rageanticheat.mod.history` | Show the player's punishment history. |
 | `/alts <player>` | `rageanticheat.mod.alts` | List accounts that share an IP with the player. |
+| `/maintenance <on\|off\|add\|remove\|list> [player]` | `rageanticheat.maintenance` | Maintenance mode and its whitelist. Ops can always join. |
 
 Durations look like `30s`, `10m`, `2h`, `1d12h`, `7d`, `2w`, `1mo`, `1y`, or `perm`. If you leave the duration out, the ban or mute is permanent.
 
@@ -113,6 +122,8 @@ Durations look like `30s`, `10m`, `2h`, `1d12h`, `7d`, `2w`, `1mo`, `1y`, or `pe
 | `rageanticheat.exploits.bypass` | false | Skip the crash-exploit limits. |
 | `rageanticheat.mod.exempt` | false | Cannot be punished or frozen by other players. The console still can. |
 | `rageanticheat.mod.clearchat.bypass` | op | Keep your chat when it is cleared. |
+| `rageanticheat.chat.bypass` | op | Not limited by the chat spam filter. |
+| `rageanticheat.mods.bypass` | false | Join with mods on the client-mods blocklist. |
 
 ## Discord
 
@@ -129,7 +140,7 @@ Durations look like `30s`, `10m`, `2h`, `1d12h`, `7d`, `2w`, `1mo`, `1y`, or `pe
 3. Turn on **Developer Mode** (Discord settings → Advanced), then right-click your server, staff role and alert channel to copy their IDs.
 4. Fill in `discord.bot` in `config.yml`, set `enabled: true`, and run `/rageanticheat reload`.
 
-Members with the staff role can use `/ban`, `/mute`, `/kick`, `/warn`, `/unban`, `/unmute`, `/freeze`, `/clearchat`, `/profile`, `/history` and `/players`. Punishments given from Discord are recorded as `Discord:<username>`.
+Members with the staff role can use `/ban`, `/mute`, `/kick`, `/warn`, `/unban`, `/unmute`, `/freeze`, `/clearchat`, `/profile`, `/history`, `/players` and `/maintenance`. Punishments given from Discord are recorded as `Discord:<username>`.
 
 `/console` runs any server command as the console. It is only available when `allow-console: true` is set, and only to members with the admin role.
 
@@ -164,6 +175,9 @@ anti-bot:
 - **KillAura or Scaffold flags laggy players:** raise `hitbox-expand` or `max-misses`.
 - **Reach flags high-ping players:** raise `max-distance` to 3.8–4.0.
 - **Timer flags players with an unstable connection:** raise `max-ahead-ms` or `max-lag-credit-ms`.
+- **AutoClicker flags fast legitimate clickers:** lower `min-deviation-ms` or raise `max-cps`.
+- **FastBreak flags players with unstable ping:** lower `min-ratio` toward 0.7.
+- **AutoTotem flags quick players:** lower `min-reaction-ms`.
 - **Xray alerts on legitimate miners:** raise `min-ores` or `max-ores-per-stone`. Paper's own anti-xray (`paper-world-defaults.yml → anticheat.anti-xray`) is still the best way to stop X-ray itself.
 - **Too many kicks:** raise `kick-threshold` or `decay-per-second`.
 
@@ -203,6 +217,8 @@ Each tick, vanilla moves a player by `previous move × friction + acceleration`.
 
 The player is flagged once the excess over a rolling window of moves adds up past `max-excess`. The prediction continues from the *allowed* move rather than the real one, so moving just inside the tolerance every tick cannot slowly build up speed.
 
+**NoSlow** is part of the same prediction. While the server sees the player using an item (eating, drinking, blocking, drawing a bow), acceleration is cut to 20% as in vanilla, and a violation is reported as NoSlow.
+
 </details>
 
 <details>
@@ -220,12 +236,16 @@ The player is flagged once the excess over a rolling window of moves adds up pas
 
 - **Reach:** distance from the attacker's eyes to the closest point of the target's hitbox.
 - **KillAura:** the check ray-traces from the attacker's eyes along their view. A hit on a target whose hitbox (expanded by `hitbox-expand` to allow for ping) is not under the crosshair counts as a miss. `max-misses` misses within the window flag the player. Hitting more than `max-targets` different entities within half a second also flags.
+- **AutoClicker:** the server handles packets between ticks, so arm swings arrive with real-time precision. Swings aimed at a block (mining, placing) and swings from dropping items are ignored. More than `max-cps` clicks per second flags, and so does a streak of `samples` clicks whose spacing varies by less than `min-deviation-ms`.
+- **CrystalAura:** a crystal's spawn packet goes out on the tick after it is placed and takes half the ping to reach the client. A hit on a crystal younger than that is aimed at a predicted entity ID, which only cheats do. Crystal places and breaks per second are limited, and crystal hits get the KillAura crosshair test.
+- **AutoTotem:** when a totem pops, the time until the click that moves the next totem into the off hand, minus the ping, is the player's reaction time. Each inventory click event is one click packet, so this works without ProtocolLib.
 
 </details>
 
 <details>
 <summary><b>Nuker, Scaffold and Xray</b></summary>
 
+- **FastBreak:** the time between the client's "start mining" and "finished" packets is compared with the time the block takes with the player's tool, enchantments and effects. Vanilla servers accept 70%, which FastBreak cheats use; the default limit is 80%.
 - **Nuker:** more blocks per tick or per second than instamining allows, blocks beyond reach, or blocks more than `max-angle` away from the crosshair.
 - **Scaffold:** each placement ray-traces the player's view. The block they clicked must be the block and face they are looking at, and repeated mismatches flag. Too many placements per second also flag.
 - **Xray:** counts "hidden" ores, meaning ores with no air or liquid touching them, against stone mined. Only the first ore of a vein counts. A ratio far above normal mining alerts staff.
@@ -239,6 +259,9 @@ The player is flagged once the excess over a rolling window of moves adds up pas
 - **Anti-bot:** runs before the ban and VPN checks, so a flood cannot use up the VPN lookup quota. Returning players, those with a profile, are never held back by attack mode.
 - **Anti-VPN:** each IP is looked up once per `cache-hours`. Local and LAN addresses are skipped. Behind BungeeCord or Velocity, enable IP forwarding so the plugin sees players' real IPs.
 - **Alts:** every join records the IP. Accounts that have used the same IP are linked.
+- **Client mods:** clients report a brand (`vanilla`, `fabric`, `forge`, ...) and the plugin channels their mods use. Both are matched against `client-mods.blocked` as whole words.
+- **Chat anti-spam:** at most `max-messages` per `window-seconds`, and no repeat of the same message (ignoring case, spaces and punctuation) within `repeat-seconds`. Private-message commands count as chat. Every blocked message is a strike; enough strikes in a minute mute the player through the moderation system.
+- **Maintenance:** the state and whitelist are saved in `maintenance.yml`. The server list gets an unknown protocol version, so clients show the version text, "Maintenance", where the ping bars normally are.
 
 </details>
 
@@ -267,13 +290,15 @@ No anti-cheat is perfect. These are the cases we know about:
 - **Shared IPs:** families, schools and public Wi-Fi share IPs, which affects alt detection and the per-IP limit. That's why blocking alts of banned players is off by default.
 - **Vanilla bans:** `/ban` overrides the vanilla command. Bans made with `minecraft:ban` or from before installing are not in RageAnticheat's database.
 - **Single server:** storage is SQLite on one server. It is not shared across a BungeeCord or Velocity network.
+- **Client mod detection only sees honest clients:** cheat clients can hide or fake their brand and channels. Freecam runs entirely on the client and leaves no trace the server can see; Paper's anti-xray and entity tracking limit what it reveals.
+- **AutoClicker and AutoTotem need real-time packets:** under heavy server lag they reset rather than judge.
 - **Hovering in place:** a player hovering without moving sends no movement packets, so they are caught on their next move.
 
 ## Roadmap
 
 - [ ] MySQL/MariaDB storage for networks
-- [ ] AutoClicker (CPS limits)
-- [ ] FastPlace and FastBreak
+- [ ] Velocity (anti-knockback)
+- [ ] InventoryMove and AutoArmor
 - [ ] IP bans and IP mutes
 - [ ] In-game GUI for profiles and history
 
@@ -304,9 +329,11 @@ Bug reports, false-positive reports and pull requests are all welcome.
 ```
 src/main/java/dev/rage/anticheat/
   RageAnticheat.java       plugin entry point, wiring, violations, Discord routing
-  MovementListener.java    Flight, Spider, Speed, Jesus, Step, NoFall, Timer
-  CombatListener.java      Reach, KillAura
-  BlockListener.java       Nuker, Scaffold, Xray
+  MovementListener.java    Flight, Spider, Speed, NoSlow, Jesus, Step, NoFall, Timer
+  CombatListener.java      Reach, KillAura, CrystalAura, AutoClicker
+  BlockListener.java       Nuker, FastBreak, Scaffold, Xray
+  InventoryListener.java   AutoTotem
+  ClientListener.java      blocked client mods (brand and channels)
   ExploitListener.java     book, item NBT and sign crash exploits
   RageCommand.java         /rageanticheat
   Settings.java            config.yml snapshot for the checks
@@ -318,7 +345,8 @@ src/main/java/dev/rage/anticheat/
     PunishmentStore.java   punishments (SQL)
     Moderation.java        ban/mute/kick/warn logic shared by commands, anticheat and Discord
     ModerationCommand.java /ban /mute /kick /warn /unban /unmute /clearchat /history
-    ChatListener.java      mute enforcement
+    ChatListener.java      mute enforcement, chat anti-spam and auto-mute
+    Maintenance.java       /maintenance, join filter and server list status
     LoginListener.java     ban, VPN and alt checks at login; join tracking
     AntiBot.java           per-IP limit and join-flood attack mode
     VpnCheck.java          proxycheck.io lookups with a cache
