@@ -53,7 +53,23 @@ record Settings(
         boolean phaseEnabled,
         boolean airPlaceEnabled,
         Tower tower,
-        Criticals criticals) {
+        Criticals criticals,
+        ChestStealer chestStealer,
+        AutoArmor autoArmor) {
+
+    /** Putting on armor pieces faster than a person can click them. */
+    record AutoArmor(boolean enabled, long minIntervalMs) {
+        static AutoArmor from(ConfigurationSection c) {
+            return new AutoArmor(c.getBoolean("enabled", true), Math.max(0, c.getLong("min-interval-ms", 50)));
+        }
+    }
+
+    /** Taking items out of a chest faster than a person can react to it opening. */
+    record ChestStealer(boolean enabled, long minReactionMs) {
+        static ChestStealer from(ConfigurationSection c) {
+            return new ChestStealer(c.getBoolean("enabled", true), Math.max(0, c.getLong("min-reaction-ms", 50)));
+        }
+    }
 
     /** Faking a fall to land critical hits while standing on the ground. */
     record Criticals(boolean enabled, int maxStreak) {
@@ -258,7 +274,9 @@ record Settings(
                 c.getBoolean("checks.phase.enabled", true),
                 c.getBoolean("checks.airplace.enabled", true),
                 Tower.from(section(c, "checks.tower")),
-                Criticals.from(section(c, "checks.criticals")));
+                Criticals.from(section(c, "checks.criticals")),
+                ChestStealer.from(section(c, "checks.cheststealer")),
+                AutoArmor.from(section(c, "checks.autoarmor")));
     }
 
     /** Check name to enabled state, in display order. */
@@ -292,6 +310,8 @@ record Settings(
         checks.put("AirPlace", airPlaceEnabled);
         checks.put("Tower", tower.enabled());
         checks.put("Criticals", criticals.enabled());
+        checks.put("ChestStealer", chestStealer.enabled());
+        checks.put("AutoArmor", autoArmor.enabled());
         return checks;
     }
 }

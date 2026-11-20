@@ -368,7 +368,7 @@ src/main/java/dev/rage/anticheat/
     DiscordWebhook.java    rate-limited webhook posts
     DiscordBot.java        slash-command bot (JDA)
   logic/                   pure Java, no Bukkit imports, unit-tested
-examples/example-addon/    an addon with a ChestStealer check, built with the plugin
+examples/example-addon/    an addon with a SneakSpam check, built with the plugin
 ```
 
 ## License

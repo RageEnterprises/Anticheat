@@ -203,6 +203,18 @@ checks:
     # Such hits in a row that are allowed. Stepping off a slab causes one now and then.
     max-streak: 3
 
+  cheststealer:
+    # Taking an item out of a chest, barrel, shulker box or ender chest sooner after it opened than
+    # a person can react, minus the ping. Only the first click is timed. Cancelled.
+    enabled: true
+    # A person needs at least 150 ms to see the chest and click an item.
+    min-reaction-ms: 50
+  autoarmor:
+    # Three armor pieces put on with less than min-interval-ms between them. Cancelled.
+    enabled: true
+    # Moving the mouse to the next piece and clicking takes a person about 100 ms.
+    min-interval-ms: 50
+
 grace:
   # Ticks to skip all movement checks after knockback, damage, explosions, or server-applied velocity.
   knockback-ticks: 30

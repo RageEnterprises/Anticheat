@@ -9,7 +9,7 @@ public final class ExampleAddon extends JavaPlugin {
     @Override
     public void onEnable() {
         saveDefaultConfig();
-        long minReactionMs = getConfig().getLong("chest-stealer.min-reaction-ms", 50);
-        RageAnticheatApi.get().register(this, new ChestStealerCheck(minReactionMs));
+        int maxPerSecond = getConfig().getInt("sneak-spam.max-toggles-per-second", 15);
+        RageAnticheatApi.get().register(this, new SneakSpamCheck(maxPerSecond));
     }
 }

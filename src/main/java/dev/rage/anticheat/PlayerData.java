@@ -105,6 +105,12 @@ final class PlayerData {
     /** The last change to food or potion effects, which the client learns a ping later, for ImpossibleSprint. */
     long sprintStateNanos = Long.MIN_VALUE / 2;
 
+    /** When the open container was opened (0 when its first click was seen), for ChestStealer. */
+    long containerOpenNanos;
+    /** The last armor piece put on, and quick ones in a row, for AutoArmor. */
+    long lastArmorNanos = Long.MIN_VALUE / 2;
+    int quickArmor;
+
     /** When the last totem of undying popped, for AutoTotem. */
     long totemPopNanos = Long.MIN_VALUE / 2;
 
