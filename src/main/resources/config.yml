@@ -71,6 +71,13 @@ checks:
     # Largest angle between the crosshair and the block centre, in degrees.
     max-angle: 75
 
+  fastbreak:
+    # Mining a block faster than the tool, enchantments and effects allow. Flagged breaks are cancelled.
+    enabled: true
+    # Flag when a block is mined in less than this share of the vanilla time. Vanilla servers accept
+    # 0.7, which is what FastBreak cheats use. Lower this if players with unstable ping get flagged.
+    min-ratio: 0.8
+
   scaffold:
     # Placing blocks against a face the player is not looking at (bridging cheats), or too fast.
     enabled: true

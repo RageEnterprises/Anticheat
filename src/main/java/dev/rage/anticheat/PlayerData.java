@@ -43,6 +43,13 @@ final class PlayerData {
     int breakTick = -1;
     int breaksThisTick;
 
+    /** The block being mined, for FastBreak. digNanos is 0 when no block is being mined. */
+    long digNanos;
+    int digX;
+    int digY;
+    int digZ;
+    double digSpeed;
+
     PlayerData(Settings s) {
         speed = new SpeedTracker(s.speedSamples());
         breaks = new EventWindow(s.nuker().maxPerSecond() + 1);

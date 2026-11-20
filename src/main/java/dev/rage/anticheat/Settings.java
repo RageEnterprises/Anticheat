@@ -43,7 +43,16 @@ record Settings(
         AutoClicker autoClicker,
         Crystal crystal,
         AutoTotem autoTotem,
-        boolean noSlowEnabled) {
+        boolean noSlowEnabled,
+        FastBreak fastBreak) {
+
+    /** Mining blocks faster than the tool and effects allow. */
+    record FastBreak(boolean enabled, double minRatio) {
+        static FastBreak from(ConfigurationSection c) {
+            return new FastBreak(c.getBoolean("enabled", true),
+                    Math.max(0, Math.min(1, c.getDouble("min-ratio", 0.8))));
+        }
+    }
 
     /** Moving a totem into the off hand faster than a person can react to the last one popping. */
     record AutoTotem(boolean enabled, long minReactionMs) {
@@ -173,7 +182,8 @@ record Settings(
                 AutoClicker.from(section(c, "checks.autoclicker")),
                 Crystal.from(section(c, "checks.crystal")),
                 AutoTotem.from(section(c, "checks.autototem")),
-                c.getBoolean("checks.noslow.enabled", true));
+                c.getBoolean("checks.noslow.enabled", true),
+                FastBreak.from(section(c, "checks.fastbreak")));
     }
 
     /** Check name to enabled state, in display order. */
@@ -189,6 +199,7 @@ record Settings(
         checks.put("Timer", timerEnabled);
         checks.put("Reach", reachEnabled);
         checks.put("Nuker", nuker.enabled());
+        checks.put("FastBreak", fastBreak.enabled());
         checks.put("Scaffold", scaffold.enabled());
         checks.put("KillAura", killAura.enabled());
         checks.put("Xray", xray.enabled());
