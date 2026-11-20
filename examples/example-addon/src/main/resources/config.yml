@@ -1,0 +1,4 @@
+chest-stealer:
+  # A person needs at least 150 ms to see an opened chest and click an item in it.
+  # Chest stealers take items almost at once. Measured after subtracting the player's ping.
+  min-reaction-ms: 50
