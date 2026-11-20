@@ -44,7 +44,8 @@ record Settings(
         Crystal crystal,
         AutoTotem autoTotem,
         boolean noSlowEnabled,
-        FastBreak fastBreak) {
+        FastBreak fastBreak,
+        Set<String> disabledAddons) {
 
     /** Mining blocks faster than the tool and effects allow. */
     record FastBreak(boolean enabled, double minRatio) {
@@ -146,6 +147,14 @@ record Settings(
         return section != null ? section : c.createSection(path);
     }
 
+    private static Set<String> lowercase(List<String> names) {
+        Set<String> result = new HashSet<>();
+        for (String name : names) {
+            result.add(name.trim().toLowerCase(java.util.Locale.ROOT));
+        }
+        return Set.copyOf(result);
+    }
+
     static Settings from(ConfigurationSection c, Logger logger) {
         return new Settings(
                 c.getBoolean("checks.flight.enabled", true),
@@ -183,7 +192,8 @@ record Settings(
                 Crystal.from(section(c, "checks.crystal")),
                 AutoTotem.from(section(c, "checks.autototem")),
                 c.getBoolean("checks.noslow.enabled", true),
-                FastBreak.from(section(c, "checks.fastbreak")));
+                FastBreak.from(section(c, "checks.fastbreak")),
+                lowercase(c.getStringList("addons.disabled")));
     }
 
     /** Check name to enabled state, in display order. */

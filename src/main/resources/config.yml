@@ -194,6 +194,11 @@ client-mods:
   blocked: [wurst, meteor, aristois, impact, liquidbounce, rusherhack, future, inertia, kamiblue, salhack,
             konas, phobos, bleachhack, thunderhack, baritone, freecam, xray, killaura]
 
+addons:
+  # Checks added by addon plugins (see ADDONS.md) to turn off, by name, for example [FastBow].
+  # /rageanticheat status lists every addon check. Players with rageanticheat.bypass.<name> skip one check.
+  disabled: []
+
 moderation:
   # Announce punishments to every player. false: only staff with rageanticheat.alerts see them.
   broadcast: true

@@ -1,5 +1,7 @@
 package dev.rage.anticheat;
 
+import dev.rage.anticheat.api.PlayerFlagEvent;
+import dev.rage.anticheat.api.RageAnticheatApi;
 import dev.rage.anticheat.discord.DiscordBot;
 import dev.rage.anticheat.discord.DiscordWebhook;
 import dev.rage.anticheat.moderation.Database;
@@ -20,6 +22,7 @@ import java.io.File;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -45,6 +48,7 @@ public final class RageAnticheat extends JavaPlugin {
     private Maintenance maintenance;
     private Profiles profiles;
     private VpnCheck vpnCheck;
+    private RageAnticheatApi api;
     private final Set<String> webhookEvents = new HashSet<>();
 
     /** Embed colors for Discord, matching the red theme. */
@@ -113,6 +117,7 @@ public final class RageAnticheat extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new ExploitListener(this), this);
         getServer().getPluginManager().registerEvents(new InventoryListener(this), this);
         getServer().getPluginManager().registerEvents(new ClientListener(this), this);
+        api = new RageAnticheatApi(this);
 
         // Server lag detection for the Timer check: a slow tick delivers queued packets in a burst.
         lastTickNanos = System.nanoTime();
@@ -258,11 +263,40 @@ public final class RageAnticheat extends JavaPlugin {
         return d;
     }
 
+    RageAnticheatApi api() {
+        return api;
+    }
+
+    // --- Used by the addon API in dev.rage.anticheat.api; addons use RageAnticheatApi instead. ---
+
+    /** Flags {@code player} for an addon check. Main thread only. */
+    public void flag(Player player, String check, String details) {
+        if (player.isOnline()) {
+            flag(player, data(player), check, details);
+        }
+    }
+
+    public int violations(Player player) {
+        PlayerData d = players.get(player.getUniqueId());
+        return d == null ? 0 : d.violations.count();
+    }
+
+    public boolean serverLagging() {
+        return serverLagging(System.nanoTime());
+    }
+
+    public Set<String> builtInChecks() {
+        return settings.checks().keySet();
+    }
+
+    public boolean addonCheckEnabled(String name) {
+        return !settings.disabledAddons().contains(name.toLowerCase(Locale.ROOT));
+    }
+
     void forget(Player player) {
         players.remove(player.getUniqueId());
     }
 
-    /** Records a violation: log, alert staff, and kick once the limit is reached. The setback is already done. */
     /** Tells staff and Discord about a check result without adding a violation. */
     void alert(Player player, String check, String details, String count) {
         String[] placeholders = {"player", player.getName(), "check", check, "count", count, "details", details};
@@ -278,7 +312,11 @@ public final class RageAnticheat extends JavaPlugin {
                 messages.plain("discord-alert", placeholders), COLOR_ALERT);
     }
 
+    /** Records a violation: log, alert staff, and kick once the limit is reached. The setback is already done. */
     void flag(Player player, PlayerData d, String check, String details) {
+        if (!new PlayerFlagEvent(player, check, details).callEvent()) {
+            return;
+        }
         double level = d.violations.increment();
         int count = d.violations.count();
         getLogger().info(String.format("%s failed %s (%s) vl=%.1f", player.getName(), check, details, level));
