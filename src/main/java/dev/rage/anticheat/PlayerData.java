@@ -70,6 +70,13 @@ final class PlayerData {
     final EventWindow crystalBreaks;
     final EventWindow crystalPlaces;
 
+    /** The last InvalidRotation flag, to flag once a second. */
+    long rotationFlagNanos = Long.MIN_VALUE / 2;
+    /** The last arm swing, for NoSwing. */
+    long lastSwingNanos = Long.MIN_VALUE / 2;
+    /** The last change to food or potion effects, which the client learns a ping later, for ImpossibleSprint. */
+    long sprintStateNanos = Long.MIN_VALUE / 2;
+
     /** When the last totem of undying popped, for AutoTotem. */
     long totemPopNanos = Long.MIN_VALUE / 2;
 

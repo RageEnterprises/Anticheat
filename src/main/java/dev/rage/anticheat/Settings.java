@@ -45,7 +45,16 @@ record Settings(
         AutoTotem autoTotem,
         boolean noSlowEnabled,
         FastBreak fastBreak,
-        Set<String> disabledAddons) {
+        Set<String> disabledAddons,
+        BadPackets badPackets) {
+
+    /** Packets a vanilla client never sends, which cheat clients send to spoof or skip things. */
+    record BadPackets(boolean invalidRotation, boolean noSwing, boolean impossibleSprint) {
+        static BadPackets from(ConfigurationSection c) {
+            return new BadPackets(c.getBoolean("invalid-rotation", true), c.getBoolean("no-swing", true),
+                    c.getBoolean("impossible-sprint", true));
+        }
+    }
 
     /** Mining blocks faster than the tool and effects allow. */
     record FastBreak(boolean enabled, double minRatio) {
@@ -193,7 +202,8 @@ record Settings(
                 AutoTotem.from(section(c, "checks.autototem")),
                 c.getBoolean("checks.noslow.enabled", true),
                 FastBreak.from(section(c, "checks.fastbreak")),
-                lowercase(c.getStringList("addons.disabled")));
+                lowercase(c.getStringList("addons.disabled")),
+                BadPackets.from(section(c, "checks.badpackets")));
     }
 
     /** Check name to enabled state, in display order. */
@@ -216,6 +226,9 @@ record Settings(
         checks.put("AutoClicker", autoClicker.enabled());
         checks.put("CrystalAura", crystal.enabled());
         checks.put("AutoTotem", autoTotem.enabled());
+        checks.put("InvalidRotation", badPackets.invalidRotation());
+        checks.put("NoSwing", badPackets.noSwing());
+        checks.put("ImpossibleSprint", badPackets.impossibleSprint());
         return checks;
     }
 }

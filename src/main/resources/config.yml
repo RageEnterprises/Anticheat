@@ -142,6 +142,15 @@ checks:
     # People need at least 150 ms to see the pop and click; auto-totem cheats need a few.
     min-reaction-ms: 80
 
+  badpackets:
+    # Packets the vanilla client never sends, which cheat clients use to fake what the server sees.
+    # Pitch beyond straight up or down (silent aim, "derp" and spin bots). Flagged at most once a second.
+    invalid-rotation: true
+    # Attacking without the arm swing packet that every vanilla attack sends (many kill auras skip it).
+    no-swing: true
+    # Starting to sprint with 6 food or less, or while blind. Cancelled when flagged.
+    impossible-sprint: true
+
 grace:
   # Ticks to skip all movement checks after knockback, damage, explosions, or server-applied velocity.
   knockback-ticks: 30
