@@ -2,6 +2,7 @@ package dev.rage.anticheat;
 
 import dev.rage.anticheat.logic.EventWindow;
 import dev.rage.anticheat.logic.SpeedTracker;
+import dev.rage.anticheat.logic.TargetTracker;
 import dev.rage.anticheat.logic.TimerBalance;
 import dev.rage.anticheat.logic.ViolationCounter;
 import org.bukkit.Location;
@@ -44,7 +45,13 @@ final class PlayerData {
         breaks = new EventWindow(s.nuker().maxPerSecond() + 1);
         places = new EventWindow(s.scaffold().maxPerSecond() + 1);
         placeMisses = new EventWindow(s.scaffold().maxMisses() + 1);
+        attackMisses = new EventWindow(s.killAura().maxMisses() + 1);
+        attackTargets = new TargetTracker(s.killAura().maxTargets() + 1);
     }
+
+    /** Hits outside the crosshair, and recent attack targets, for KillAura. */
+    final EventWindow attackMisses;
+    final TargetTracker attackTargets;
 
     /** Blocks placed recently, and placements against a face the player was not looking at, for Scaffold. */
     final EventWindow places;

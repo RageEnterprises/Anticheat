@@ -75,6 +75,18 @@ checks:
     # Holding right-click places 5 per second; fast clicking can reach about 15.
     max-per-second: 20
 
+  killaura:
+    # Hitting targets outside the crosshair, or many different targets at once. Flagged hits are cancelled.
+    enabled: true
+    # Extra size added to the target hitbox for the crosshair test. Covers ping and target movement.
+    hitbox-expand: 0.5
+    # Flag after this many hits outside the crosshair within miss-window-ticks.
+    max-misses: 4
+    miss-window-ticks: 100
+    # Flag when more than this many different targets are hit within switch-window-ticks (10 = half a second).
+    max-targets: 3
+    switch-window-ticks: 10
+
 grace:
   # Ticks to skip all movement checks after knockback, damage, explosions, or server-applied velocity.
   knockback-ticks: 30

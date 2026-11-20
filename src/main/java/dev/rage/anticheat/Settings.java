@@ -32,7 +32,8 @@ record Settings(
         boolean kickEnabled,
         boolean alertsEnabled,
         Nuker nuker,
-        Scaffold scaffold) {
+        Scaffold scaffold,
+        KillAura killAura) {
 
     /** Breaking too many blocks, too far away, or outside the player's view. */
     record Nuker(boolean enabled, int maxPerTick, int maxPerSecond, double maxDistance, double maxAngle) {
@@ -52,6 +53,19 @@ record Settings(
                     Math.max(1, c.getInt("max-misses", 3)),
                     Math.max(1, c.getInt("miss-window-ticks", 60)),
                     Math.max(1, c.getInt("max-per-second", 20)));
+        }
+    }
+
+    /** Hitting targets outside the crosshair, or many different targets in a short time. */
+    record KillAura(boolean enabled, double hitboxExpand, int maxMisses, int missWindowTicks,
+                    int maxTargets, int switchWindowTicks) {
+        static KillAura from(ConfigurationSection c) {
+            return new KillAura(c.getBoolean("enabled", true),
+                    Math.max(0, c.getDouble("hitbox-expand", 0.5)),
+                    Math.max(1, c.getInt("max-misses", 4)),
+                    Math.max(1, c.getInt("miss-window-ticks", 100)),
+                    Math.max(1, c.getInt("max-targets", 3)),
+                    Math.max(1, c.getInt("switch-window-ticks", 10)));
         }
     }
 
@@ -90,7 +104,8 @@ record Settings(
                 c.getBoolean("violations.kick-enabled", true),
                 c.getBoolean("alerts.enabled", true),
                 Nuker.from(section(c, "checks.nuker")),
-                Scaffold.from(section(c, "checks.scaffold")));
+                Scaffold.from(section(c, "checks.scaffold")),
+                KillAura.from(section(c, "checks.killaura")));
     }
 
     /** Check name to enabled state, in display order. */
@@ -106,6 +121,7 @@ record Settings(
         checks.put("Reach", reachEnabled);
         checks.put("Nuker", nuker.enabled());
         checks.put("Scaffold", scaffold.enabled());
+        checks.put("KillAura", killAura.enabled());
         return checks;
     }
 }
