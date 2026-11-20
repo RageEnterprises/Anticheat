@@ -123,6 +123,13 @@ checks:
     max-breaks-per-second: 12
     max-places-per-second: 12
 
+  autototem:
+    # Moving a new totem into the off hand right after one pops. Measured from the inventory click
+    # packets: time from the pop to the refill click, minus the player's ping. Flagged refills are cancelled.
+    enabled: true
+    # People need at least 150 ms to see the pop and click; auto-totem cheats need a few.
+    min-reaction-ms: 80
+
 grace:
   # Ticks to skip all movement checks after knockback, damage, explosions, or server-applied velocity.
   knockback-ticks: 30

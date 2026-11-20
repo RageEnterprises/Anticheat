@@ -41,7 +41,15 @@ record Settings(
         KillAura killAura,
         Xray xray,
         AutoClicker autoClicker,
-        Crystal crystal) {
+        Crystal crystal,
+        AutoTotem autoTotem) {
+
+    /** Moving a totem into the off hand faster than a person can react to the last one popping. */
+    record AutoTotem(boolean enabled, long minReactionMs) {
+        static AutoTotem from(ConfigurationSection c) {
+            return new AutoTotem(c.getBoolean("enabled", true), Math.max(0, c.getLong("min-reaction-ms", 80)));
+        }
+    }
 
     /** Crystal aura: breaking end crystals faster than the client could see them, or too many per second. */
     record Crystal(boolean enabled, int maxBreaksPerSecond, int maxPlacesPerSecond) {
@@ -162,7 +170,8 @@ record Settings(
                 KillAura.from(section(c, "checks.killaura")),
                 Xray.from(section(c, "checks.xray"), logger),
                 AutoClicker.from(section(c, "checks.autoclicker")),
-                Crystal.from(section(c, "checks.crystal")));
+                Crystal.from(section(c, "checks.crystal")),
+                AutoTotem.from(section(c, "checks.autototem")));
     }
 
     /** Check name to enabled state, in display order. */
@@ -182,6 +191,7 @@ record Settings(
         checks.put("Xray", xray.enabled());
         checks.put("AutoClicker", autoClicker.enabled());
         checks.put("CrystalAura", crystal.enabled());
+        checks.put("AutoTotem", autoTotem.enabled());
         return checks;
     }
 }

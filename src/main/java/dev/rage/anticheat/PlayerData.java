@@ -63,6 +63,9 @@ final class PlayerData {
     final EventWindow crystalBreaks;
     final EventWindow crystalPlaces;
 
+    /** When the last totem of undying popped, for AutoTotem. */
+    long totemPopNanos = Long.MIN_VALUE / 2;
+
     /** Hits outside the crosshair, and recent attack targets, for KillAura. */
     final EventWindow attackMisses;
     final TargetTracker attackTargets;
