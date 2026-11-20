@@ -38,6 +38,7 @@ public final class RageAnticheat extends JavaPlugin {
         reload();
         getServer().getPluginManager().registerEvents(new MovementListener(this), this);
         getServer().getPluginManager().registerEvents(new CombatListener(this), this);
+        getServer().getPluginManager().registerEvents(new BlockListener(this), this);
 
         // Server lag detection for the Timer check: a slow tick delivers queued packets in a burst.
         lastTickNanos = System.nanoTime();
@@ -134,7 +135,7 @@ public final class RageAnticheat extends JavaPlugin {
     PlayerData data(Player player) {
         PlayerData d = players.get(player.getUniqueId());
         if (d == null) {
-            d = new PlayerData(settings.speedSamples());
+            d = new PlayerData(settings);
             players.put(player.getUniqueId(), d);
         }
         return d;

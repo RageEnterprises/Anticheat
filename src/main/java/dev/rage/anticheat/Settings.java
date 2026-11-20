@@ -30,7 +30,24 @@ record Settings(
         double kickThreshold,
         double decayPerSecond,
         boolean kickEnabled,
-        boolean alertsEnabled) {
+        boolean alertsEnabled,
+        Nuker nuker) {
+
+    /** Breaking too many blocks, too far away, or outside the player's view. */
+    record Nuker(boolean enabled, int maxPerTick, int maxPerSecond, double maxDistance, double maxAngle) {
+        static Nuker from(ConfigurationSection c) {
+            return new Nuker(c.getBoolean("enabled", true),
+                    Math.max(1, c.getInt("max-per-tick", 3)),
+                    Math.max(1, c.getInt("max-per-second", 22)),
+                    c.getDouble("max-distance", 6.0),
+                    c.getDouble("max-angle", 75));
+        }
+    }
+
+    private static ConfigurationSection section(ConfigurationSection c, String path) {
+        ConfigurationSection section = c.getConfigurationSection(path);
+        return section != null ? section : c.createSection(path);
+    }
 
     static Settings from(ConfigurationSection c) {
         return new Settings(
@@ -60,7 +77,8 @@ record Settings(
                 Math.max(1, c.getDouble("violations.kick-threshold", 20)),
                 Math.max(0, c.getDouble("violations.decay-per-second", 0.5)),
                 c.getBoolean("violations.kick-enabled", true),
-                c.getBoolean("alerts.enabled", true));
+                c.getBoolean("alerts.enabled", true),
+                Nuker.from(section(c, "checks.nuker")));
     }
 
     /** Check name to enabled state, in display order. */
@@ -74,6 +92,7 @@ record Settings(
         checks.put("NoFall", noFallEnabled);
         checks.put("Timer", timerEnabled);
         checks.put("Reach", reachEnabled);
+        checks.put("Nuker", nuker.enabled());
         return checks;
     }
 }

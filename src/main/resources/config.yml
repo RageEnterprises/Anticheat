@@ -55,6 +55,17 @@ checks:
     # Eye-to-hitbox distance. Vanilla is 3.0; the extra covers ping. Raise for high-ping players.
     max-distance: 3.5
 
+  nuker:
+    # Breaking many blocks at once, from too far away, or outside the player's view. Flagged breaks are cancelled.
+    enabled: true
+    # Vanilla instamining breaks at most one block per tick (20 per second). The extra covers lag bursts.
+    max-per-tick: 3
+    max-per-second: 22
+    # Eye to block centre. Vanilla reach is 4.5 plus up to 0.87 to the centre.
+    max-distance: 6.0
+    # Largest angle between the crosshair and the block centre, in degrees.
+    max-angle: 75
+
 grace:
   # Ticks to skip all movement checks after knockback, damage, explosions, or server-applied velocity.
   knockback-ticks: 30

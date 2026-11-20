@@ -1,5 +1,6 @@
 package dev.rage.anticheat;
 
+import dev.rage.anticheat.logic.EventWindow;
 import dev.rage.anticheat.logic.SpeedTracker;
 import dev.rage.anticheat.logic.TimerBalance;
 import dev.rage.anticheat.logic.ViolationCounter;
@@ -33,8 +34,14 @@ final class PlayerData {
     private double safeY;
     private double safeZ;
 
-    PlayerData(int speedSamples) {
-        speed = new SpeedTracker(speedSamples);
+    /** Blocks broken recently, for Nuker. */
+    final EventWindow breaks;
+    int breakTick = -1;
+    int breaksThisTick;
+
+    PlayerData(Settings s) {
+        speed = new SpeedTracker(s.speedSamples());
+        breaks = new EventWindow(s.nuker().maxPerSecond() + 1);
     }
 
     void setSafe(Location loc) {
