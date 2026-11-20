@@ -193,3 +193,23 @@ discord:
     max-per-minute: 20
     # What to post: alerts (anticheat flags), punishments, joins (alts, VPN and bot blocks), exploits.
     events: [alerts, punishments, joins, exploits]
+
+  bot:
+    # A Discord bot to moderate the server with slash commands (/ban, /mute, /kick, /warn, /unban,
+    # /unmute, /freeze, /clearchat, /profile, /history, /players). Create an application at
+    # https://discord.com/developers/applications, add a bot, copy its token, and invite it with the
+    # "bot" and "applications.commands" scopes. Keep the token secret: anyone with it controls the bot.
+    enabled: false
+    token: ""
+    # Right-click the server / role / channel with Developer Mode on (Discord settings > Advanced) to copy IDs.
+    guild-id: ""
+    # Members with this role can use the moderation commands.
+    staff-role-id: ""
+    # Members with this role can also use /console, if allow-console is true.
+    admin-role-id: ""
+    # Allow /console, which runs any server command as the console. Only enable this if you trust
+    # everyone with the admin role as much as server operators.
+    allow-console: false
+    # Channel for alert embeds (leave empty to not post), and which events to post there.
+    alert-channel-id: ""
+    events: [alerts, punishments, joins, exploits]

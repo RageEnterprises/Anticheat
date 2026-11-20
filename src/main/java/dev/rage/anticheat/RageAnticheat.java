@@ -1,5 +1,6 @@
 package dev.rage.anticheat;
 
+import dev.rage.anticheat.discord.DiscordBot;
 import dev.rage.anticheat.discord.DiscordWebhook;
 import dev.rage.anticheat.moderation.Database;
 import dev.rage.anticheat.logic.Durations;
@@ -24,6 +25,7 @@ import java.util.UUID;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.command.PluginCommand;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -35,6 +37,7 @@ public final class RageAnticheat extends JavaPlugin {
     private final Messages messages = new Messages();
     private Settings settings;
     private DiscordWebhook webhook;
+    private DiscordBot bot;
     private Database database;
     private Moderation moderation;
     private Freeze freeze;
@@ -132,6 +135,9 @@ public final class RageAnticheat extends JavaPlugin {
         if (webhook != null) {
             webhook.close();
         }
+        if (bot != null) {
+            bot.close();
+        }
         if (database != null) {
             database.close();
         }
@@ -169,6 +175,14 @@ public final class RageAnticheat extends JavaPlugin {
             webhook = null;
         }
         webhookEvents.clear();
+        if (bot != null) {
+            bot.close();
+            bot = null;
+        }
+        if (getConfig().getBoolean("discord.bot.enabled")) {
+            ConfigurationSection botConfig = getConfig().getConfigurationSection("discord.bot");
+            bot = botConfig == null ? null : DiscordBot.start(this, botConfig);
+        }
         vpnCheck = new VpnCheck(getConfig().getString("anti-vpn.api-key", ""),
                 Math.max(1, getConfig().getLong("anti-vpn.cache-hours", 24)) * 3_600_000L);
         if (getConfig().getBoolean("discord.webhook.enabled")) {
@@ -180,13 +194,16 @@ public final class RageAnticheat extends JavaPlugin {
     }
 
     /**
-     * Posts to Discord if the webhook is enabled for {@code event}.
+     * Posts to Discord through the webhook and/or the bot, each if enabled for {@code event}.
      *
      * @param event one of alerts, punishments, joins, exploits
      */
     public void notifyDiscord(String event, String title, String description, int color) {
         if (webhook != null && webhookEvents.contains(event)) {
             webhook.send(title, description, color);
+        }
+        if (bot != null) {
+            bot.post(event, title, description, color);
         }
     }
 

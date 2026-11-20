@@ -7,6 +7,7 @@ description: Lightweight anti-cheat and moderation.
 # Downloaded by Paper from Maven Central on first start, so the jar itself stays small.
 libraries:
   - org.xerial:sqlite-jdbc:3.46.1.3
+  - net.dv8tion:JDA:5.2.1
 
 commands:
   rageanticheat:
