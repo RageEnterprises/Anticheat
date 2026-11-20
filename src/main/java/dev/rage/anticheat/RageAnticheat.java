@@ -70,6 +70,7 @@ public final class RageAnticheat extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new MovementListener(this), this);
         getServer().getPluginManager().registerEvents(new CombatListener(this), this);
         getServer().getPluginManager().registerEvents(new BlockListener(this), this);
+        getServer().getPluginManager().registerEvents(new ExploitListener(this), this);
 
         // Server lag detection for the Timer check: a slow tick delivers queued packets in a burst.
         lastTickNanos = System.nanoTime();

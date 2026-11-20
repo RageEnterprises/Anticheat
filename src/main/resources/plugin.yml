@@ -55,6 +55,9 @@ permissions:
   rageanticheat.bypass:
     description: Skip all anticheat checks.
     default: false
+  rageanticheat.exploits.bypass:
+    description: Skip the crash-exploit limits (books, item data, signs).
+    default: false
   rageanticheat.mod.*:
     description: Use every moderation command.
     default: op

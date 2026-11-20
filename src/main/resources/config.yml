@@ -123,6 +123,21 @@ alerts:
   # Send alerts to online players with rageanticheat.alerts. Violations are always logged to the console.
   enabled: true
 
+exploits:
+  # Blocks crash exploits: oversized books, creative items with huge NBT data, oversized sign lines.
+  enabled: true
+  # ban, kick or none (alert only). Bans are recorded in the player's punishment history.
+  action: ban
+  ban-duration: perm
+  # Vanilla limits: 100 pages, 1024 characters per page, 32-character titles.
+  max-book-pages: 100
+  max-page-chars: 1024
+  max-title-chars: 32
+  # Largest serialized creative-mode item. A full shulker box of normal items is well under this.
+  max-item-bytes: 65536
+  # The vanilla client cannot type more than about 90 characters per line; the protocol allows 384.
+  max-sign-line-chars: 384
+
 moderation:
   # Announce punishments to every player. false: only staff with rageanticheat.alerts see them.
   broadcast: true

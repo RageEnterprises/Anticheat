@@ -67,5 +67,10 @@ usage-unban: 'Usage: /unban \<player>'
 usage-unmute: 'Usage: /unmute \<player>'
 usage-history: 'Usage: /history \<player>'
 
+# Crash exploits. {player} {check} {details}
+exploit-alert: "<#ffc2c2>{player}</#ffc2c2> attempted a <#ffc2c2>{check}</#ffc2c2>: {details}"
+exploit-reason: "Crash exploit attempt ({check})"
+discord-exploit-title: "Exploit blocked"
+
 # Discord posts for punishments use the broadcast-* messages above as the text.
 discord-punishment-title: "Punishment: {type}"
