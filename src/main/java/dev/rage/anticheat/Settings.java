@@ -49,7 +49,8 @@ record Settings(
         BadPackets badPackets,
         Elytra elytra,
         Vehicles vehicles,
-        Velocity velocity) {
+        Velocity velocity,
+        boolean phaseEnabled) {
 
     /** Taking less knockback than the server gave. */
     record Velocity(boolean enabled, double minRatio, double minKnockback, int failsToFlag) {
@@ -236,7 +237,8 @@ record Settings(
                 BadPackets.from(section(c, "checks.badpackets")),
                 Elytra.from(section(c, "checks.elytra")),
                 Vehicles.from(section(c, "checks.vehicles")),
-                Velocity.from(section(c, "checks.velocity")));
+                Velocity.from(section(c, "checks.velocity")),
+                c.getBoolean("checks.phase.enabled", true));
     }
 
     /** Check name to enabled state, in display order. */
@@ -266,6 +268,7 @@ record Settings(
         checks.put("BoatFly", vehicles.enabled());
         checks.put("EntitySpeed", vehicles.enabled());
         checks.put("Velocity", velocity.enabled());
+        checks.put("Phase", phaseEnabled);
         return checks;
     }
 }

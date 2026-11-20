@@ -56,6 +56,9 @@ final class MovementListener implements Listener {
     private static final double EXPLOSION_GRACE_RADIUS = 8;
     private static final int MAX_MERGED_TICKS = 20;
     private static final int MIN_USE_TICKS = 3;
+    /** Phase tests a box this much smaller than the player on every side. */
+    private static final double PHASE_HALF_WIDTH = 0.2;
+    private static final double PHASE_INSET = 0.15;
 
     private record Flag(String check, String details) {
     }
@@ -113,7 +116,9 @@ final class MovementListener implements Listener {
             Flag jesus = checkJesus(player, d, s, world, to, dy, grounded);
             Flag step = checkStep(player, s, dy, fromGrounded, grounded);
             Flag noFall = checkNoFall(player, d, s, dy, grounded, inLiquid, slowed, now);
-            flag = flag != null ? flag : vertical != null ? vertical : jesus != null ? jesus : step != null ? step : noFall;
+            Flag phase = checkPhase(player, d, s, world, from, to);
+            flag = flag != null ? flag : phase != null ? phase : vertical != null ? vertical : jesus != null ? jesus
+                    : step != null ? step : noFall;
         }
         if (flag == null) {
             flag = speed;
@@ -274,6 +279,43 @@ final class MovementListener implements Listener {
         }
         return new Flag("NoFall", String.format("claimed ground %d moves in a row while falling, dy=%.3f",
                 d.noFallTicks, dy));
+    }
+
+    /**
+     * Moving into solid blocks. The box is a little smaller than the player so touching walls,
+     * stepping onto slabs and crouching under ledges do not count, and blocks whose collision
+     * depends on the player (scaffolding, powder snow) or that move (pistons) are skipped.
+     */
+    private static Flag checkPhase(Player p, PlayerData d, Settings s, World world, Location from, Location to) {
+        if (!s.phaseEnabled()) {
+            return null;
+        }
+        double height = p.getPose() == Pose.STANDING ? PLAYER_HEIGHT : p.getPose() == Pose.SNEAKING ? 1.5 : 0;
+        if (height == 0
+                || !collides(world, d.scratch, to.getX(), to.getY() + PHASE_INSET, to.getZ(), PHASE_HALF_WIDTH,
+                        height - 2 * PHASE_INSET)
+                || collides(world, d.scratch, from.getX(), from.getY() + PHASE_INSET, from.getZ(), PHASE_HALF_WIDTH,
+                        height - 2 * PHASE_INSET)
+                || nearChangingBlock(world, to, height)) {
+            return null;
+        }
+        Material inside = world.getType(to.getBlockX(), (int) Math.floor(to.getY() + 0.5), to.getBlockZ());
+        return new Flag("Phase", "moved into " + inside.name().toLowerCase(java.util.Locale.ROOT));
+    }
+
+    private static boolean nearChangingBlock(World world, Location at, double height) {
+        for (int bx = (int) Math.floor(at.getX() - 0.5); bx <= (int) Math.floor(at.getX() + 0.5); bx++) {
+            for (int bz = (int) Math.floor(at.getZ() - 0.5); bz <= (int) Math.floor(at.getZ() + 0.5); bz++) {
+                for (int by = (int) Math.floor(at.getY()) - 1; by <= (int) Math.floor(at.getY() + height); by++) {
+                    Material m = world.getType(bx, by, bz);
+                    if (m == Material.SCAFFOLDING || m == Material.POWDER_SNOW || m == Material.MOVING_PISTON
+                            || m == Material.PISTON_HEAD) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     /** More movement packets than real time allows. */

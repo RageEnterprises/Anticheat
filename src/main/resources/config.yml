@@ -182,6 +182,11 @@ checks:
     # Failed knockbacks in a row before a flag, so one lag spike does not count.
     fails-to-flag: 2
 
+  phase:
+    # Moving into solid blocks (Phase, NoClip). Paper already refuses most such moves ("moved
+    # wrongly"); this flags the ones that get through. Uses a slightly smaller box than the player.
+    enabled: true
+
 grace:
   # Ticks to skip all movement checks after knockback, damage, explosions, or server-applied velocity.
   knockback-ticks: 30
