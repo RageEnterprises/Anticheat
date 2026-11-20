@@ -55,6 +55,7 @@ final class MovementListener implements Listener {
     private static final double GROUND_EPSILON = 0.01;
     private static final double EXPLOSION_GRACE_RADIUS = 8;
     private static final int MAX_MERGED_TICKS = 20;
+    private static final int MIN_USE_TICKS = 3;
 
     private record Flag(String check, String details) {
     }
@@ -198,6 +199,10 @@ final class MovementListener implements Listener {
         if (p.isSneaking() && p.getPose() == Pose.SNEAKING) {
             acceleration *= MovePhysics.sneakFactor(armorLevel(p.getInventory().getLeggings(), Enchantment.SWIFT_SNEAK));
         }
+        boolean slowedByItem = !liquidPhysics && s.noSlowEnabled() && usingItem(p);
+        if (slowedByItem) {
+            acceleration *= MovePhysics.USE_ITEM_FACTOR;
+        }
 
         if (exempt) {
             d.speed.carry(horizontal, friction);
@@ -210,8 +215,19 @@ final class MovementListener implements Listener {
         if (!d.speed.exceeded(s.speedMaxExcess()) || nearPushingEntity(p)) {
             return null;
         }
-        return new Flag("Speed", String.format("moved=%.3f allowed=%.3f excess=%.3f blocks",
-                horizontal, d.speed.lastAllowed(), d.speed.excess()));
+        return new Flag(slowedByItem ? "NoSlow" : "Speed", String.format("moved=%.3f allowed=%.3f excess=%.3f blocks%s",
+                horizontal, d.speed.lastAllowed(), d.speed.excess(), slowedByItem ? " while using an item" : ""));
+    }
+
+    /**
+     * Eating, drinking, blocking with a shield, drawing a bow and other item use slows a vanilla
+     * client to a fifth of its speed. Item use starts on the client before the server knows of it,
+     * which only makes the check more lenient; it is skipped in the last ticks of eating, which
+     * client and server may finish a tick apart.
+     */
+    private static boolean usingItem(Player p) {
+        return p.isHandRaised() && p.getHandRaisedTime() >= MIN_USE_TICKS
+                && p.getActiveItemRemainingTime() > MIN_USE_TICKS;
     }
 
     /** Standing on a liquid surface without sinking, as if it were solid. */

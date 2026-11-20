@@ -23,6 +23,11 @@ checks:
     max-excess: 0.1
     samples: 10
 
+  noslow:
+    # Moving at full speed while eating, drinking, blocking with a shield or drawing a bow. Vanilla
+    # slows the player to a fifth of their speed. Part of the speed prediction, so it needs speed enabled.
+    enabled: true
+
   jesus:
     # Walking on water or lava.
     enabled: true

@@ -42,7 +42,8 @@ record Settings(
         Xray xray,
         AutoClicker autoClicker,
         Crystal crystal,
-        AutoTotem autoTotem) {
+        AutoTotem autoTotem,
+        boolean noSlowEnabled) {
 
     /** Moving a totem into the off hand faster than a person can react to the last one popping. */
     record AutoTotem(boolean enabled, long minReactionMs) {
@@ -171,7 +172,8 @@ record Settings(
                 Xray.from(section(c, "checks.xray"), logger),
                 AutoClicker.from(section(c, "checks.autoclicker")),
                 Crystal.from(section(c, "checks.crystal")),
-                AutoTotem.from(section(c, "checks.autototem")));
+                AutoTotem.from(section(c, "checks.autototem")),
+                c.getBoolean("checks.noslow.enabled", true));
     }
 
     /** Check name to enabled state, in display order. */
@@ -180,6 +182,7 @@ record Settings(
         checks.put("Flight", flightEnabled);
         checks.put("Spider", spiderEnabled);
         checks.put("Speed", speedEnabled);
+        checks.put("NoSlow", speedEnabled && noSlowEnabled);
         checks.put("Jesus", jesusEnabled);
         checks.put("Step", stepEnabled);
         checks.put("NoFall", noFallEnabled);

@@ -13,6 +13,8 @@ public final class MovePhysics {
     public static final double LIQUID_ACCELERATION = 0.02;
     /** Upper bound for the push flowing water or lava adds per tick. */
     public static final double FLOW_PUSH = 0.014;
+    /** Using an item (eating, blocking, drawing a bow) scales movement input to 20%. */
+    public static final double USE_ITEM_FACTOR = 0.2;
 
     private MovePhysics() {
     }
