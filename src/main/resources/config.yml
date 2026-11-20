@@ -171,6 +171,17 @@ checks:
     mount-speed-factor: 2.6
     max-boat-air-moves: 10
 
+  velocity:
+    # Anti-knockback. After knockback, the player's moves must cover min-ratio of the distance the
+    # knockback carries a player, measured until their ping plus 6 ticks. Players next to walls, in
+    # liquid, cobwebs, vehicles or gliding are skipped.
+    enabled: true
+    min-ratio: 0.4
+    # Knockback weaker than this (blocks per tick) is not measured.
+    min-knockback: 0.2
+    # Failed knockbacks in a row before a flag, so one lag spike does not count.
+    fails-to-flag: 2
+
 grace:
   # Ticks to skip all movement checks after knockback, damage, explosions, or server-applied velocity.
   knockback-ticks: 30

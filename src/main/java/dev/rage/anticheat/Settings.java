@@ -48,7 +48,16 @@ record Settings(
         Set<String> disabledAddons,
         BadPackets badPackets,
         Elytra elytra,
-        Vehicles vehicles) {
+        Vehicles vehicles,
+        Velocity velocity) {
+
+    /** Taking less knockback than the server gave. */
+    record Velocity(boolean enabled, double minRatio, double minKnockback, int failsToFlag) {
+        static Velocity from(ConfigurationSection c) {
+            return new Velocity(c.getBoolean("enabled", true), Math.max(0, Math.min(1, c.getDouble("min-ratio", 0.4))),
+                    Math.max(0.05, c.getDouble("min-knockback", 0.2)), Math.max(1, c.getInt("fails-to-flag", 2)));
+        }
+    }
 
     /** Boats and horses moving faster than they can, and boats flying. */
     record Vehicles(boolean enabled, double maxBoatSpeed, double maxBoatIceSpeed, double mountSpeedFactor,
@@ -226,7 +235,8 @@ record Settings(
                 lowercase(c.getStringList("addons.disabled")),
                 BadPackets.from(section(c, "checks.badpackets")),
                 Elytra.from(section(c, "checks.elytra")),
-                Vehicles.from(section(c, "checks.vehicles")));
+                Vehicles.from(section(c, "checks.vehicles")),
+                Velocity.from(section(c, "checks.velocity")));
     }
 
     /** Check name to enabled state, in display order. */
@@ -255,6 +265,7 @@ record Settings(
         checks.put("ElytraFly", elytra.enabled());
         checks.put("BoatFly", vehicles.enabled());
         checks.put("EntitySpeed", vehicles.enabled());
+        checks.put("Velocity", velocity.enabled());
         return checks;
     }
 }

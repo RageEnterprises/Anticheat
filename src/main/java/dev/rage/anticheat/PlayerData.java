@@ -2,6 +2,7 @@ package dev.rage.anticheat;
 
 import dev.rage.anticheat.logic.ClickStats;
 import dev.rage.anticheat.logic.EventWindow;
+import dev.rage.anticheat.logic.KnockbackRun;
 import dev.rage.anticheat.logic.SpeedTracker;
 import dev.rage.anticheat.logic.TargetTracker;
 import dev.rage.anticheat.logic.TimerBalance;
@@ -49,6 +50,11 @@ final class PlayerData {
     double vehicleZ;
     int vehicleTick = -1;
     int vehicleAirMoves;
+
+    /** Velocity: movement along the last knockback, which knockback it is, and failures in a row. */
+    final KnockbackRun knockback = new KnockbackRun();
+    int knockbackId;
+    int velocityFails;
 
     private World safeWorld;
     private double safeX;
@@ -128,5 +134,6 @@ final class PlayerData {
         jesusTicks = 0;
         noFallTicks = 0;
         speed.reset();
+        knockback.stop();
     }
 }
