@@ -187,6 +187,15 @@ checks:
     # wrongly"); this flags the ones that get through. Uses a slightly smaller box than the player.
     enabled: true
 
+  airplace:
+    # Placing a block against air. Every vanilla placement clicks an existing block. Cancelled.
+    enabled: true
+  tower:
+    # Stacking blocks under yourself (a pillar) faster than jumping allows. Cancelled.
+    enabled: true
+    # Jumping and placing manages about 2.5 a second.
+    max-per-second: 4
+
 grace:
   # Ticks to skip all movement checks after knockback, damage, explosions, or server-applied velocity.
   knockback-ticks: 30

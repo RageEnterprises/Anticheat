@@ -77,6 +77,7 @@ final class PlayerData {
         speed = new SpeedTracker(s.speedSamples());
         breaks = new EventWindow(s.nuker().maxPerSecond() + 1);
         places = new EventWindow(s.scaffold().maxPerSecond() + 1);
+        towerPlaces = new EventWindow(s.tower().maxPerSecond() + 1);
         placeMisses = new EventWindow(s.scaffold().maxMisses() + 1);
         attackMisses = new EventWindow(s.killAura().maxMisses() + 1);
         attackTargets = new TargetTracker(s.killAura().maxTargets() + 1);
@@ -110,6 +111,9 @@ final class PlayerData {
     /** Blocks placed recently, and placements against a face the player was not looking at, for Scaffold. */
     final EventWindow places;
     final EventWindow placeMisses;
+    /** Blocks stacked under the player recently, and the height of the last, for Tower. */
+    final EventWindow towerPlaces;
+    int lastTowerY = Integer.MIN_VALUE;
 
     void setSafe(Location loc) {
         safeWorld = loc.getWorld();

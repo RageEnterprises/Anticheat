@@ -50,7 +50,16 @@ record Settings(
         Elytra elytra,
         Vehicles vehicles,
         Velocity velocity,
-        boolean phaseEnabled) {
+        boolean phaseEnabled,
+        boolean airPlaceEnabled,
+        Tower tower) {
+
+    /** Building a pillar under yourself faster than jumping allows. */
+    record Tower(boolean enabled, int maxPerSecond) {
+        static Tower from(ConfigurationSection c) {
+            return new Tower(c.getBoolean("enabled", true), Math.max(1, c.getInt("max-per-second", 4)));
+        }
+    }
 
     /** Taking less knockback than the server gave. */
     record Velocity(boolean enabled, double minRatio, double minKnockback, int failsToFlag) {
@@ -238,7 +247,9 @@ record Settings(
                 Elytra.from(section(c, "checks.elytra")),
                 Vehicles.from(section(c, "checks.vehicles")),
                 Velocity.from(section(c, "checks.velocity")),
-                c.getBoolean("checks.phase.enabled", true));
+                c.getBoolean("checks.phase.enabled", true),
+                c.getBoolean("checks.airplace.enabled", true),
+                Tower.from(section(c, "checks.tower")));
     }
 
     /** Check name to enabled state, in display order. */
@@ -269,6 +280,8 @@ record Settings(
         checks.put("EntitySpeed", vehicles.enabled());
         checks.put("Velocity", velocity.enabled());
         checks.put("Phase", phaseEnabled);
+        checks.put("AirPlace", airPlaceEnabled);
+        checks.put("Tower", tower.enabled());
         return checks;
     }
 }
