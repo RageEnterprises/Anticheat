@@ -59,10 +59,36 @@ final class CombatListener implements Listener {
             details = killAura(d, s.killAura(), eye, box, target);
             check = details == null ? null : "KillAura";
         }
+        if (check == null && s.criticals().enabled()) {
+            details = criticals(player, d, s.criticals());
+            check = details == null ? null : "Criticals";
+        }
         if (check != null) {
             event.setCancelled(true);
             plugin.flag(player, d, check, details);
         }
+    }
+
+    /**
+     * Critical hits need a fall. Criticals cheats fake one with tiny hops the server cannot see as
+     * moves, so the client claims to be falling while standing on the ground and never jumped.
+     * Stepping off a slab does the same once in a while, so only a streak of such hits flags.
+     */
+    private static String criticals(Player player, PlayerData d, Settings.Criticals c) {
+        @SuppressWarnings("deprecation") // deliberately reading the client-controlled flag
+        boolean clientGround = player.isOnGround();
+        Location at = player.getLocation();
+        int now = Bukkit.getCurrentTick();
+        boolean faked = player.getFallDistance() > 0 && !clientGround && !player.isClimbing() && !player.isInWater()
+                && !player.isInsideVehicle() && now - d.lastJumpTick > 15
+                && MovementListener.collides(at.getWorld(), d.scratch, at.getX(), at.getY() - 0.3, at.getZ(), 0.299, 0.3);
+        d.critStreak = faked ? d.critStreak + 1 : 0;
+        if (d.critStreak <= c.maxStreak()) {
+            return null;
+        }
+        d.critStreak = 0;
+        return String.format("%d hits in a row falling %.2f blocks while on the ground, without jumping",
+                c.maxStreak() + 1, player.getFallDistance());
     }
 
     /**

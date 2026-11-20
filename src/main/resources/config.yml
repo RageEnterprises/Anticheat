@@ -196,6 +196,13 @@ checks:
     # Jumping and placing manages about 2.5 a second.
     max-per-second: 4
 
+  criticals:
+    # Critical hits from a faked fall: the client claims to be falling while standing on the ground
+    # without having jumped (knockback counts as a jump). Flagged hits are cancelled.
+    enabled: true
+    # Such hits in a row that are allowed. Stepping off a slab causes one now and then.
+    max-streak: 3
+
 grace:
   # Ticks to skip all movement checks after knockback, damage, explosions, or server-applied velocity.
   knockback-ticks: 30

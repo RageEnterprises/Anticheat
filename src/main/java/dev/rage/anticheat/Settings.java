@@ -52,7 +52,15 @@ record Settings(
         Velocity velocity,
         boolean phaseEnabled,
         boolean airPlaceEnabled,
-        Tower tower) {
+        Tower tower,
+        Criticals criticals) {
+
+    /** Faking a fall to land critical hits while standing on the ground. */
+    record Criticals(boolean enabled, int maxStreak) {
+        static Criticals from(ConfigurationSection c) {
+            return new Criticals(c.getBoolean("enabled", true), Math.max(1, c.getInt("max-streak", 3)));
+        }
+    }
 
     /** Building a pillar under yourself faster than jumping allows. */
     record Tower(boolean enabled, int maxPerSecond) {
@@ -249,7 +257,8 @@ record Settings(
                 Velocity.from(section(c, "checks.velocity")),
                 c.getBoolean("checks.phase.enabled", true),
                 c.getBoolean("checks.airplace.enabled", true),
-                Tower.from(section(c, "checks.tower")));
+                Tower.from(section(c, "checks.tower")),
+                Criticals.from(section(c, "checks.criticals")));
     }
 
     /** Check name to enabled state, in display order. */
@@ -282,6 +291,7 @@ record Settings(
         checks.put("Phase", phaseEnabled);
         checks.put("AirPlace", airPlaceEnabled);
         checks.put("Tower", tower.enabled());
+        checks.put("Criticals", criticals.enabled());
         return checks;
     }
 }

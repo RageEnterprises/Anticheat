@@ -56,6 +56,10 @@ final class PlayerData {
     int knockbackId;
     int velocityFails;
 
+    /** Criticals: the last real jump, and hits in a row with a faked fall. */
+    int lastJumpTick = Integer.MIN_VALUE / 2;
+    int critStreak;
+
     private World safeWorld;
     private double safeX;
     private double safeY;

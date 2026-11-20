@@ -56,6 +56,8 @@ final class MovementListener implements Listener {
     private static final double EXPLOSION_GRACE_RADIUS = 8;
     private static final int MAX_MERGED_TICKS = 20;
     private static final int MIN_USE_TICKS = 3;
+    /** A jump rises 0.42 in its first tick; fake critical hops rise far less. */
+    private static final double JUMP_DY = 0.2;
     /** Phase tests a box this much smaller than the player on every side. */
     private static final double PHASE_HALF_WIDTH = 0.2;
     private static final double PHASE_INSET = 0.15;
@@ -122,6 +124,9 @@ final class MovementListener implements Listener {
         }
         if (flag == null) {
             flag = speed;
+        }
+        if (dy > JUMP_DY) {
+            d.lastJumpTick = now;
         }
         d.lastDy = dy;
         d.wasGrounded = grounded;
