@@ -5,6 +5,7 @@ import dev.rage.anticheat.logic.SpeedTracker;
 import dev.rage.anticheat.logic.TargetTracker;
 import dev.rage.anticheat.logic.TimerBalance;
 import dev.rage.anticheat.logic.ViolationCounter;
+import dev.rage.anticheat.logic.XrayTracker;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.util.BoundingBox;
@@ -15,6 +16,7 @@ final class PlayerData {
     final ViolationCounter violations = new ViolationCounter();
     final SpeedTracker speed;
     final TimerBalance timer = new TimerBalance();
+    final XrayTracker xray = new XrayTracker();
     /** Scratch box reused by collision tests so the hot path does not allocate one. */
     final BoundingBox scratch = new BoundingBox();
 

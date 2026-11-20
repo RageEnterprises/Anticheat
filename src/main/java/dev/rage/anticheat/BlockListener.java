@@ -4,6 +4,7 @@ import dev.rage.anticheat.logic.Angles;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -15,7 +16,7 @@ import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.util.RayTraceResult;
 import org.bukkit.util.Vector;
 
-/** Block checks: Nuker and Scaffold. Flagged actions are cancelled. */
+/** Block checks: Nuker and Scaffold (flagged actions are cancelled) and Xray (alerts). */
 final class BlockListener implements Listener {
 
     private final RageAnticheat plugin;
@@ -36,8 +37,50 @@ final class BlockListener implements Listener {
         if (details != null) {
             event.setCancelled(true);
             plugin.flag(player, d, "Nuker", details);
+            return;
+        }
+        if (s.xray().enabled()) {
+            xray(player, d, s.xray(), event.getBlock());
         }
     }
+
+    /** X-ray is a pattern over many blocks, so it alerts staff (or adds a violation) but never cancels. */
+    private void xray(Player player, PlayerData d, Settings.Xray x, Block block) {
+        Material type = block.getType();
+        if (x.stone().contains(type)) {
+            d.xray.mineStone();
+            return;
+        }
+        if (!x.ores().contains(type) || exposed(block)) {
+            return;
+        }
+        if (!d.xray.mineHiddenOre(x.minOres(), x.maxOresPerStone())) {
+            return;
+        }
+        String details = String.format("%d hidden ores for %d stone (%.3f per stone, max %.3f)",
+                d.xray.hiddenOres(), d.xray.stone(), d.xray.ratio(), x.maxOresPerStone());
+        d.xray.reset();
+        if (x.punish()) {
+            plugin.flag(player, d, "Xray", details);
+        } else {
+            plugin.getLogger().info(player.getName() + " suspected of Xray (" + details + ")");
+            plugin.alert(player, "Xray", details, "?");
+        }
+    }
+
+    /** True if any side of the block touches air or liquid, so the player could have seen it. */
+    private static boolean exposed(Block block) {
+        for (BlockFace face : SIDES) {
+            Material m = block.getRelative(face).getType();
+            if (m.isAir() || m == Material.WATER || m == Material.LAVA) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static final BlockFace[] SIDES = {
+            BlockFace.UP, BlockFace.DOWN, BlockFace.NORTH, BlockFace.SOUTH, BlockFace.EAST, BlockFace.WEST};
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onPlace(BlockPlaceEvent event) {

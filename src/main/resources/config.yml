@@ -87,6 +87,20 @@ checks:
     max-targets: 3
     switch-window-ticks: 10
 
+  xray:
+    # Mining far more hidden ores (not touching air or liquid) per stone than a normal player.
+    # Lucky players exist, so by default this only alerts staff. Paper's built-in anti-xray
+    # (paper-world-defaults.yml > anticheat.anti-xray) is the best way to stop X-ray itself.
+    enabled: true
+    # true: add a violation like the other checks (can lead to a kick). false: alert only.
+    punish: false
+    # Only judge after this many hidden ore veins.
+    min-ores: 4
+    # Alert when hidden ore veins per stone mined is above this. Branch mining is around 0.003.
+    max-ores-per-stone: 0.02
+    ores: [DIAMOND_ORE, DEEPSLATE_DIAMOND_ORE, EMERALD_ORE, DEEPSLATE_EMERALD_ORE, ANCIENT_DEBRIS]
+    stone: [STONE, DEEPSLATE, TUFF, GRANITE, DIORITE, ANDESITE, NETHERRACK, BASALT, BLACKSTONE]
+
 grace:
   # Ticks to skip all movement checks after knockback, damage, explosions, or server-applied velocity.
   knockback-ticks: 30

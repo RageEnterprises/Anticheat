@@ -77,7 +77,7 @@ public final class RageAnticheat extends JavaPlugin {
     /** Re-reads config.yml and messages.yml. Player state is dropped because buffer sizes may change. */
     void reload() {
         reloadConfig();
-        settings = Settings.from(getConfig());
+        settings = Settings.from(getConfig(), getLogger());
         messages.load(this);
         players.clear();
 
@@ -146,13 +146,9 @@ public final class RageAnticheat extends JavaPlugin {
     }
 
     /** Records a violation: log, alert staff, and kick once the limit is reached. The setback is already done. */
-    void flag(Player player, PlayerData d, String check, String details) {
-        double level = d.violations.increment();
-        int count = d.violations.count();
-        getLogger().info(String.format("%s failed %s (%s) vl=%.1f", player.getName(), check, details, level));
-
-        String[] placeholders = {"player", player.getName(), "check", check, "count", String.valueOf(count),
-                "details", details};
+    /** Tells staff and Discord about a check result without adding a violation. */
+    void alert(Player player, String check, String details, String count) {
+        String[] placeholders = {"player", player.getName(), "check", check, "count", count, "details", details};
         if (settings.alertsEnabled()) {
             Component alert = messages.get("alert", placeholders);
             for (Player staff : Bukkit.getOnlinePlayers()) {
@@ -163,6 +159,13 @@ public final class RageAnticheat extends JavaPlugin {
         }
         notifyDiscord("alerts", messages.plain("discord-alert-title", placeholders),
                 messages.plain("discord-alert", placeholders), COLOR_ALERT);
+    }
+
+    void flag(Player player, PlayerData d, String check, String details) {
+        double level = d.violations.increment();
+        int count = d.violations.count();
+        getLogger().info(String.format("%s failed %s (%s) vl=%.1f", player.getName(), check, details, level));
+        alert(player, check, details, String.valueOf(count));
 
         if (settings.kickEnabled() && d.violations.reached(settings.kickThreshold())) {
             d.violations.reset();
