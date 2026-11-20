@@ -4,6 +4,7 @@ import dev.rage.anticheat.RageAnticheat;
 import java.net.InetSocketAddress;
 import java.util.UUID;
 import java.util.logging.Level;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -41,6 +42,9 @@ public final class LoginListener implements Listener {
                 event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_BANNED, moderation.banScreen(ban));
                 return;
             }
+            if (blockedVpn(event)) {
+                return;
+            }
             if (plugin.getConfig().getBoolean("alts.enabled", true)
                     && plugin.getConfig().getBoolean("alts.block-banned-alts", false)) {
                 PlayerRecord banned = alts.bannedAccountOnIp(event.getAddress().getHostAddress(), uuid);
@@ -59,6 +63,40 @@ public final class LoginListener implements Listener {
             // Keep the server joinable if the database fails; the error is already logged.
             plugin.getLogger().log(Level.WARNING, "Could not check bans for " + event.getName(), e);
         }
+    }
+
+    /** Refuses VPN and proxy connections when anti-vpn is enabled. Returns true if the join was refused. */
+    private boolean blockedVpn(AsyncPlayerPreLoginEvent event) {
+        ConfigurationSection c = plugin.getConfig().getConfigurationSection("anti-vpn");
+        if (c == null || !c.getBoolean("enabled", false)) {
+            return false;
+        }
+        for (String allowed : c.getStringList("allowed-players")) {
+            if (allowed.equalsIgnoreCase(event.getName()) || allowed.equalsIgnoreCase(event.getUniqueId().toString())) {
+                return false;
+            }
+        }
+        String[] placeholders = {"player", event.getName()};
+        try {
+            if (!plugin.vpnCheck().isVpn(event.getAddress())) {
+                return false;
+            }
+        } catch (VpnCheck.LookupException e) {
+            plugin.getLogger().warning("VPN check for " + event.getName() + " failed: " + e.getMessage());
+            if (c.getBoolean("allow-on-error", true)) {
+                return false;
+            }
+            event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_OTHER,
+                    plugin.messages().screen("vpn-error-screen", placeholders));
+            return true;
+        }
+        event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_OTHER, plugin.messages().screen("vpn-screen", placeholders));
+        plugin.getServer().getScheduler().runTask(plugin, () -> {
+            plugin.broadcastStaff(plugin.messages().get("vpn-alert", placeholders));
+            plugin.notifyDiscord("joins", plugin.messages().plain("discord-vpn-title", placeholders),
+                    plugin.messages().plain("vpn-alert", placeholders), RageAnticheat.COLOR_INFO);
+        });
+        return true;
     }
 
     @EventHandler(priority = EventPriority.MONITOR)

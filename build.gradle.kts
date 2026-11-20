@@ -14,6 +14,8 @@ dependencies {
     // Compiled against the oldest supported API so the jar loads on Paper 1.20 and newer.
     compileOnly("io.papermc.paper:paper-api:1.20.4-R0.1-SNAPSHOT")
 
+    // Paper provides Gson at runtime; the tests need their own copy.
+    testImplementation("com.google.code.gson:gson:2.10.1")
     testImplementation(platform("org.junit:junit-bom:5.11.4"))
     testImplementation("org.junit.jupiter:junit-jupiter")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")

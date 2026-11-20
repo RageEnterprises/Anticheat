@@ -11,6 +11,7 @@ import dev.rage.anticheat.moderation.Moderation;
 import dev.rage.anticheat.moderation.ModerationCommand;
 import dev.rage.anticheat.moderation.Profiles;
 import dev.rage.anticheat.moderation.Punishment;
+import dev.rage.anticheat.moderation.VpnCheck;
 import dev.rage.anticheat.moderation.PlayerStore;
 import java.io.File;
 import java.sql.SQLException;
@@ -37,6 +38,7 @@ public final class RageAnticheat extends JavaPlugin {
     private Moderation moderation;
     private Freeze freeze;
     private Profiles profiles;
+    private VpnCheck vpnCheck;
     private final Set<String> webhookEvents = new HashSet<>();
 
     /** Embed colors for Discord, matching the red theme. */
@@ -145,6 +147,10 @@ public final class RageAnticheat extends JavaPlugin {
         return profiles;
     }
 
+    public VpnCheck vpnCheck() {
+        return vpnCheck;
+    }
+
     public Database database() {
         return database;
     }
@@ -161,6 +167,8 @@ public final class RageAnticheat extends JavaPlugin {
             webhook = null;
         }
         webhookEvents.clear();
+        vpnCheck = new VpnCheck(getConfig().getString("anti-vpn.api-key", ""),
+                Math.max(1, getConfig().getLong("anti-vpn.cache-hours", 24)) * 3_600_000L);
         if (getConfig().getBoolean("discord.webhook.enabled")) {
             webhook = DiscordWebhook.create(getConfig().getString("discord.webhook.url"),
                     getConfig().getString("discord.webhook.username", "RageAnticheat"),

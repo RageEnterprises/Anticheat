@@ -145,6 +145,18 @@ moderation:
   # Commands muted players cannot use, so they cannot get around a mute with private messages.
   muted-blocked-commands: [msg, tell, w, whisper, me, r, reply, say, m, t]
 
+anti-vpn:
+  # Refuse players who connect through a VPN or proxy. Uses proxycheck.io: each joining player's IP is
+  # sent to that service (cached for cache-hours). Behind BungeeCord/Velocity, enable IP forwarding.
+  enabled: false
+  # Optional free key from proxycheck.io for a higher daily limit (100 lookups/day without one).
+  api-key: ""
+  # Let players join when the lookup fails (timeout, daily limit). false refuses them instead.
+  allow-on-error: true
+  cache-hours: 24
+  # Names or UUIDs that may always join through a VPN.
+  allowed-players: []
+
 alts:
   # Link accounts that have joined from the same IP.
   enabled: true

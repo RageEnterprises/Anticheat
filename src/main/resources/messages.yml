@@ -99,6 +99,12 @@ alt-banned-alert: "<#ffc2c2>{player}</#ffc2c2> was refused: shares an IP with ba
 discord-alts-title: "Alt accounts detected"
 usage-alts: 'Usage: /alts \<player>'
 
+# Anti-VPN. {player}
+vpn-screen: "<bold><gradient:#7a0000:#ff2a2a>RAGE</gradient></bold>\n\n<#ff6b6b>VPNs and proxies are not allowed on this server.</#ff6b6b>\n\n<#8a8a8a>Disconnect from your VPN and try again.</#8a8a8a>"
+vpn-error-screen: "<bold><gradient:#7a0000:#ff2a2a>RAGE</gradient></bold>\n\n<#ff6b6b>We could not check your connection right now.</#ff6b6b>\n\n<#8a8a8a>Please try again in a minute.</#8a8a8a>"
+vpn-alert: "<#ffc2c2>{player}</#ffc2c2> was refused: VPN or proxy connection."
+discord-vpn-title: "VPN blocked"
+
 # Crash exploits. {player} {check} {details}
 exploit-alert: "<#ffc2c2>{player}</#ffc2c2> attempted a <#ffc2c2>{check}</#ffc2c2>: {details}"
 exploit-reason: "Crash exploit attempt ({check})"
