@@ -145,6 +145,23 @@ moderation:
   # Commands muted players cannot use, so they cannot get around a mute with private messages.
   muted-blocked-commands: [msg, tell, w, whisper, me, r, reply, say, m, t]
 
+chat:
+  anti-spam:
+    # Blocks chat spam. Private-message commands (moderation.muted-blocked-commands) count as chat.
+    # Players with rageanticheat.chat.bypass are not limited.
+    enabled: true
+    # At most max-messages messages within window-seconds.
+    max-messages: 5
+    window-seconds: 5
+    # The same message (ignoring case, spaces and punctuation) cannot be sent again within this many seconds. 0 = off.
+    repeat-seconds: 30
+    auto-mute:
+      # Mute players whose messages were blocked <strikes> times within window-seconds.
+      enabled: true
+      strikes: 5
+      window-seconds: 60
+      duration: 10m
+
 anti-bot:
   enabled: true
   # Accounts that may be online from one IP at the same time. 0 = no limit.

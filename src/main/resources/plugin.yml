@@ -88,6 +88,9 @@ permissions:
   rageanticheat.mod.exempt:
     description: Cannot be punished by other players (the console still can).
     default: false
+  rageanticheat.chat.bypass:
+    description: Not limited by the chat spam filter.
+    default: op
   rageanticheat.mod.clearchat.bypass:
     description: Keep your chat when it is cleared.
     default: op

@@ -47,6 +47,9 @@ mute-notify: "You have been muted by <#ffc2c2>{staff}</#ffc2c2> ({duration}): {r
 unmute-notify: "You have been unmuted by <#ffc2c2>{staff}</#ffc2c2>."
 warn-notify: "<bold>Warning</bold> from <#ffc2c2>{staff}</#ffc2c2>: {reason}"
 muted: "You are muted. Expires: <#ffc2c2>{expires}</#ffc2c2>. Reason: {reason}"
+chat-too-fast: "You are sending messages too quickly. Slow down."
+chat-repeated: "Do not repeat the same message."
+auto-mute-reason: "Spamming"
 chat-cleared: "The chat was cleared by <#ffc2c2>{staff}</#ffc2c2>."
 
 never-joined: "<#ffc2c2>{player}</#ffc2c2> has never joined this server."
