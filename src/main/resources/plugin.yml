@@ -12,14 +12,64 @@ commands:
   rageanticheat:
     description: Manage RageAnticheat.
     usage: /rageanticheat <reload|status|reset <player>>
+  ban:
+    description: Ban a player, permanently or for a time.
+    usage: /ban <player> [duration] [reason]
+    aliases: [rban, tempban]
+  mute:
+    description: Mute a player, permanently or for a time.
+    usage: /mute <player> [duration] [reason]
+    aliases: [rmute, tempmute]
+  kick:
+    description: Kick a player.
+    usage: /kick <player> [reason]
+    aliases: [rkick]
+  warn:
+    description: Warn a player.
+    usage: /warn <player> [reason]
+    aliases: [rwarn]
+  unban:
+    description: Lift a player's ban.
+    usage: /unban <player>
+    aliases: [pardon, runban]
+  unmute:
+    description: Lift a player's mute.
+    usage: /unmute <player>
+    aliases: [runmute]
+  clearchat:
+    description: Clear the chat for everyone.
+    usage: /clearchat
+    aliases: [cc, chatclear]
+  history:
+    description: Show a player's punishment history.
+    usage: /history <player>
+    aliases: [punishments]
 
 permissions:
   rageanticheat.admin:
     description: Use /rageanticheat.
     default: op
   rageanticheat.alerts:
-    description: Receive violation alerts in chat.
+    description: Receive violation alerts and staff notices in chat.
     default: op
   rageanticheat.bypass:
-    description: Skip all movement checks.
+    description: Skip all anticheat checks.
     default: false
+  rageanticheat.mod.*:
+    description: Use every moderation command.
+    default: op
+    children:
+      rageanticheat.mod.ban: true
+      rageanticheat.mod.mute: true
+      rageanticheat.mod.kick: true
+      rageanticheat.mod.warn: true
+      rageanticheat.mod.unban: true
+      rageanticheat.mod.unmute: true
+      rageanticheat.mod.clearchat: true
+      rageanticheat.mod.history: true
+  rageanticheat.mod.exempt:
+    description: Cannot be punished by other players (the console still can).
+    default: false
+  rageanticheat.mod.clearchat.bypass:
+    description: Keep your chat when it is cleared.
+    default: op

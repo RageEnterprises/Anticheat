@@ -2,7 +2,12 @@ package dev.rage.anticheat;
 
 import dev.rage.anticheat.discord.DiscordWebhook;
 import dev.rage.anticheat.moderation.Database;
+import dev.rage.anticheat.logic.Durations;
+import dev.rage.anticheat.moderation.ChatListener;
 import dev.rage.anticheat.moderation.LoginListener;
+import dev.rage.anticheat.moderation.Moderation;
+import dev.rage.anticheat.moderation.ModerationCommand;
+import dev.rage.anticheat.moderation.Punishment;
 import dev.rage.anticheat.moderation.PlayerStore;
 import java.io.File;
 import java.sql.SQLException;
@@ -26,6 +31,7 @@ public final class RageAnticheat extends JavaPlugin {
     private Settings settings;
     private DiscordWebhook webhook;
     private Database database;
+    private Moderation moderation;
     private final Set<String> webhookEvents = new HashSet<>();
 
     /** Embed colors for Discord, matching the red theme. */
@@ -50,7 +56,17 @@ public final class RageAnticheat extends JavaPlugin {
             return;
         }
         reload();
-        getServer().getPluginManager().registerEvents(new LoginListener(this), this);
+        moderation = new Moderation(this);
+        getServer().getPluginManager().registerEvents(new LoginListener(this, moderation), this);
+        getServer().getPluginManager().registerEvents(new ChatListener(this, moderation), this);
+        ModerationCommand moderationCommand = new ModerationCommand(this, moderation);
+        for (String name : ModerationCommand.COMMANDS) {
+            PluginCommand modCommand = getCommand(name);
+            if (modCommand != null) {
+                modCommand.setExecutor(moderationCommand);
+                modCommand.setTabCompleter(moderationCommand);
+            }
+        }
         getServer().getPluginManager().registerEvents(new MovementListener(this), this);
         getServer().getPluginManager().registerEvents(new CombatListener(this), this);
         getServer().getPluginManager().registerEvents(new BlockListener(this), this);
@@ -90,6 +106,10 @@ public final class RageAnticheat extends JavaPlugin {
         if (database != null) {
             database.close();
         }
+    }
+
+    public Moderation moderation() {
+        return moderation;
     }
 
     public Database database() {
@@ -196,6 +216,14 @@ public final class RageAnticheat extends JavaPlugin {
 
         if (settings.kickEnabled() && d.violations.reached(settings.kickThreshold())) {
             d.violations.reset();
+            if ("ban".equalsIgnoreCase(getConfig().getString("violations.action", "kick"))) {
+                long duration = Durations.parse(getConfig().getString("violations.ban-duration", "7d"));
+                String banReason = messages.plain("anticheat-ban-reason", "check", check);
+                getServer().getScheduler().runTask(this, () -> moderation.punish(Punishment.Type.BAN,
+                        new Moderation.Target(player.getUniqueId(), player.getName()), "RageAnticheat", banReason,
+                        duration == Durations.INVALID ? Durations.PERMANENT : duration));
+                return;
+            }
             Component reason = messages.get("kick", "player", player.getName(), "check", check, "count", String.valueOf(count));
             getLogger().info(player.getName() + " kicked for " + check + " violations");
             // Kick on the next tick rather than in the middle of handling the move packet.
