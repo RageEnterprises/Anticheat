@@ -121,6 +121,7 @@ public final class RageAnticheat extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new TravelListener(this), this);
         getServer().getPluginManager().registerEvents(new VelocityListener(this), this);
         getServer().getPluginManager().registerEvents(new AimListener(this), this);
+        getServer().getPluginManager().registerEvents(new FishListener(this), this);
         api = new RageAnticheatApi(this);
 
         // Server lag detection for the Timer check: a slow tick delivers queued packets in a burst.

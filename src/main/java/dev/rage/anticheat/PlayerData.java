@@ -116,6 +116,10 @@ final class PlayerData {
     long lastAttackNanos = Long.MIN_VALUE / 2;
     long aimAlertNanos = Long.MIN_VALUE / 2;
 
+    /** AutoFish: when a fish bit (0 if none is waiting), and quick catches in a row. */
+    long biteNanos;
+    int quickCatches;
+
     /** Inventory clicks while walking, for InventoryMove. */
     final EventWindow movingClicks = new EventWindow(2);
     /** The last armor piece put on, and quick ones in a row, for AutoArmor. */

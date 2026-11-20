@@ -231,6 +231,13 @@ checks:
     # Cinematic camera and some zoom mods also smooth the camera, so this only alerts staff unless true.
     punish: false
 
+  autofish:
+    # Reeling in sooner after a fish bites than a person reacts (about 200 ms), minus the ping,
+    # several catches in a row. The flagged catch is cancelled.
+    enabled: true
+    min-reaction-ms: 100
+    streak: 3
+
 grace:
   # Ticks to skip all movement checks after knockback, damage, explosions, or server-applied velocity.
   knockback-ticks: 30

@@ -57,7 +57,16 @@ record Settings(
         ChestStealer chestStealer,
         AutoArmor autoArmor,
         boolean inventoryMoveEnabled,
-        Aim aim) {
+        Aim aim,
+        AutoFish autoFish) {
+
+    /** Reeling in faster after each bite than a person reacts. */
+    record AutoFish(boolean enabled, long minReactionMs, int streak) {
+        static AutoFish from(ConfigurationSection c) {
+            return new AutoFish(c.getBoolean("enabled", true), Math.max(0, c.getLong("min-reaction-ms", 100)),
+                    Math.max(1, c.getInt("streak", 3)));
+        }
+    }
 
     /** Rotations that are not whole mouse steps: aimbots in combat, bots such as Baritone elsewhere. */
     record Aim(boolean enabled, int samples, boolean punish) {
@@ -288,7 +297,8 @@ record Settings(
                 ChestStealer.from(section(c, "checks.cheststealer")),
                 AutoArmor.from(section(c, "checks.autoarmor")),
                 c.getBoolean("checks.inventorymove.enabled", true),
-                Aim.from(section(c, "checks.aim")));
+                Aim.from(section(c, "checks.aim")),
+                AutoFish.from(section(c, "checks.autofish")));
     }
 
     /** Check name to enabled state, in display order. */
@@ -327,6 +337,7 @@ record Settings(
         checks.put("InventoryMove", inventoryMoveEnabled);
         checks.put("Aim", aim.enabled());
         checks.put("Bot", aim.enabled());
+        checks.put("AutoFish", autoFish.enabled());
         return checks;
     }
 }
