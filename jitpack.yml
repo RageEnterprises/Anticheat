@@ -1,0 +1,5 @@
+# JitPack builds the addon API for "com.github.RageEnterprises:Anticheat:<tag>" (see ADDONS.md).
+jdk:
+  - openjdk17
+install:
+  - ./gradlew publishToMavenLocal -x test

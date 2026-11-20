@@ -1,5 +1,6 @@
 package dev.rage.anticheat;
 
+import dev.rage.anticheat.api.Check;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -58,6 +59,10 @@ final class RageCommand implements TabExecutor {
         for (Map.Entry<String, Boolean> check : plugin.settings().checks().entrySet()) {
             String key = check.getValue() ? "status-enabled" : "status-disabled";
             sender.sendMessage(messages.get(key, "check", check.getKey()));
+        }
+        for (Check check : plugin.api().checks()) {
+            String key = check.enabled() ? "status-enabled" : "status-disabled";
+            sender.sendMessage(messages.get(key, "check", check.name() + " (" + check.owner().getName() + ")"));
         }
         boolean any = false;
         for (Map.Entry<UUID, PlayerData> entry : plugin.players().entrySet()) {

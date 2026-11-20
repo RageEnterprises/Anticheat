@@ -1,0 +1,7 @@
+name: RageExampleAddon
+version: ${version}
+main: com.example.rageaddon.ExampleAddon
+api-version: '1.20'
+description: Example RageAnticheat addon with a ChestStealer check.
+# Makes the server enable RageAnticheat before this addon.
+depend: [RageAnticheat]
