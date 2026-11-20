@@ -1,8 +1,11 @@
 package dev.rage.anticheat;
 
+import dev.rage.anticheat.logic.EventWindow;
 import dev.rage.anticheat.logic.SpeedTracker;
+import dev.rage.anticheat.logic.TargetTracker;
 import dev.rage.anticheat.logic.TimerBalance;
 import dev.rage.anticheat.logic.ViolationCounter;
+import dev.rage.anticheat.logic.XrayTracker;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.util.BoundingBox;
@@ -13,6 +16,7 @@ final class PlayerData {
     final ViolationCounter violations = new ViolationCounter();
     final SpeedTracker speed;
     final TimerBalance timer = new TimerBalance();
+    final XrayTracker xray = new XrayTracker();
     /** Scratch box reused by collision tests so the hot path does not allocate one. */
     final BoundingBox scratch = new BoundingBox();
 
@@ -33,9 +37,27 @@ final class PlayerData {
     private double safeY;
     private double safeZ;
 
-    PlayerData(int speedSamples) {
-        speed = new SpeedTracker(speedSamples);
+    /** Blocks broken recently, for Nuker. */
+    final EventWindow breaks;
+    int breakTick = -1;
+    int breaksThisTick;
+
+    PlayerData(Settings s) {
+        speed = new SpeedTracker(s.speedSamples());
+        breaks = new EventWindow(s.nuker().maxPerSecond() + 1);
+        places = new EventWindow(s.scaffold().maxPerSecond() + 1);
+        placeMisses = new EventWindow(s.scaffold().maxMisses() + 1);
+        attackMisses = new EventWindow(s.killAura().maxMisses() + 1);
+        attackTargets = new TargetTracker(s.killAura().maxTargets() + 1);
     }
+
+    /** Hits outside the crosshair, and recent attack targets, for KillAura. */
+    final EventWindow attackMisses;
+    final TargetTracker attackTargets;
+
+    /** Blocks placed recently, and placements against a face the player was not looking at, for Scaffold. */
+    final EventWindow places;
+    final EventWindow placeMisses;
 
     void setSafe(Location loc) {
         safeWorld = loc.getWorld();

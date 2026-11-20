@@ -1,20 +1,120 @@
 # RageAnticheat messages, in MiniMessage format: https://docs.advntr.dev/minimessage/format
-# Placeholders: {player}, {check}, {count}.
+# Colors are RGB hex codes (<#rrggbb>) and gradients (<gradient:#from:#to>), not the 16 default colors.
+# Placeholders are written as {name}; each message lists the ones it supports.
 #
-# Every message is placed into "format" at {message}. Change the colors here to retheme the plugin.
-format: "<dark_red><bold>RAGE → </bold></dark_red><red>{message}</red>"
+# Every chat message is placed into "format" at {message}. Change the colors here to retheme the plugin.
+format: "<bold><gradient:#7a0000:#ff2a2a>RAGE →</gradient></bold> <#ff6b6b>{message}</#ff6b6b>"
 
+# Names and values are highlighted with #ffc2c2. Search and replace it to change the highlight everywhere.
+
+# {player} {check} {count}
 kick: "Kicked for repeated movement violations."
-alert: "{player} failed {check} ({count} violations)."
+alert: "<#ffc2c2>{player}</#ffc2c2> failed <#ffc2c2>{check}</#ffc2c2> ({count} violations)."
+
+# Discord webhook / bot posts (plain text, formatting tags are removed). {player} {check} {count} {details}
+discord-alert-title: "Anticheat alert"
+discord-alert: "{player} failed {check} ({count} violations)\n{details}"
 
 # A literal < must be written as \< so MiniMessage does not read it as a tag.
 usage: 'Usage: /rageanticheat \<reload|status|reset \<player>>'
 no-permission: "You do not have permission to do that."
 reload: "Configuration and messages reloaded."
-reset: "Reset violations for {player}."
-player-not-found: "{player} is not online."
+reset: "Reset violations for <#ffc2c2>{player}</#ffc2c2>."
+player-not-found: "<#ffc2c2>{player}</#ffc2c2> is not online."
 
-status-enabled: "{check} check: enabled"
-status-disabled: "{check} check: disabled"
-status-player: "{player}: {count} violations"
+status-enabled: "{check} check: <#7dff9a>enabled</#7dff9a>"
+status-disabled: "{check} check: <#8a8a8a>disabled</#8a8a8a>"
+status-player: "<#ffc2c2>{player}</#ffc2c2>: {count} violations"
 status-none: "No players have active violations."
+
+# ---------------------------------------------------------------------------------------------
+# Moderation. Placeholders for punishments: {id} {player} {staff} {reason} {type} {duration}
+# {expires} {date}. Screens (ban-screen, kick-screen) are shown on the disconnect screen and do
+# not use "format". Use \n for a new line.
+# ---------------------------------------------------------------------------------------------
+ban-screen: "<bold><gradient:#7a0000:#ff2a2a>RAGE</gradient></bold>\n\n<#ff6b6b>You are banned from this server.</#ff6b6b>\n\n<#ffc2c2>Reason:</#ffc2c2> <white>{reason}</white>\n<#ffc2c2>Expires:</#ffc2c2> <white>{expires}</white>\n<#ffc2c2>Banned by:</#ffc2c2> <white>{staff}</white>\n\n<#8a8a8a>Ban ID #{id}</#8a8a8a>"
+kick-screen: "<bold><gradient:#7a0000:#ff2a2a>RAGE</gradient></bold>\n\n<#ff6b6b>You were kicked.</#ff6b6b>\n\n<#ffc2c2>Reason:</#ffc2c2> <white>{reason}</white>\n<#ffc2c2>Kicked by:</#ffc2c2> <white>{staff}</white>"
+anticheat-ban-reason: "Cheating ({check})"
+
+broadcast-ban: "<#ffc2c2>{player}</#ffc2c2> was banned by <#ffc2c2>{staff}</#ffc2c2> ({duration}): {reason}"
+broadcast-mute: "<#ffc2c2>{player}</#ffc2c2> was muted by <#ffc2c2>{staff}</#ffc2c2> ({duration}): {reason}"
+broadcast-kick: "<#ffc2c2>{player}</#ffc2c2> was kicked by <#ffc2c2>{staff}</#ffc2c2>: {reason}"
+broadcast-warn: "<#ffc2c2>{player}</#ffc2c2> was warned by <#ffc2c2>{staff}</#ffc2c2>: {reason}"
+broadcast-unban: "<#ffc2c2>{player}</#ffc2c2> was unbanned by <#ffc2c2>{staff}</#ffc2c2>."
+broadcast-unmute: "<#ffc2c2>{player}</#ffc2c2> was unmuted by <#ffc2c2>{staff}</#ffc2c2>."
+
+mute-notify: "You have been muted by <#ffc2c2>{staff}</#ffc2c2> ({duration}): {reason}"
+unmute-notify: "You have been unmuted by <#ffc2c2>{staff}</#ffc2c2>."
+warn-notify: "<bold>Warning</bold> from <#ffc2c2>{staff}</#ffc2c2>: {reason}"
+muted: "You are muted. Expires: <#ffc2c2>{expires}</#ffc2c2>. Reason: {reason}"
+chat-cleared: "The chat was cleared by <#ffc2c2>{staff}</#ffc2c2>."
+
+never-joined: "<#ffc2c2>{player}</#ffc2c2> has never joined this server."
+exempt: "<#ffc2c2>{player}</#ffc2c2> cannot be punished."
+not-banned: "<#ffc2c2>{player}</#ffc2c2> is not banned."
+not-muted: "<#ffc2c2>{player}</#ffc2c2> is not muted."
+
+# {player} {count}, then one entry per punishment with the punishment placeholders plus {status}.
+history-header: "Punishment history of <#ffc2c2>{player}</#ffc2c2> (latest {count}):"
+history-entry: "<#ffc2c2>#{id} {type}</#ffc2c2> <#8a8a8a>{date}</#8a8a8a> by {staff} ({duration}): {reason} <#8a8a8a>{status}</#8a8a8a>"
+history-none: "No punishments."
+
+usage-ban: 'Usage: /ban \<player> [duration] [reason]  (duration like 30m, 1d, 7d, perm)'
+usage-mute: 'Usage: /mute \<player> [duration] [reason]'
+usage-kick: 'Usage: /kick \<player> [reason]'
+usage-warn: 'Usage: /warn \<player> [reason]'
+usage-unban: 'Usage: /unban \<player>'
+usage-unmute: 'Usage: /unmute \<player>'
+usage-history: 'Usage: /history \<player>'
+
+# Freeze. {player} {staff}
+frozen-notify: "<bold>You have been frozen by <#ffc2c2>{staff}</#ffc2c2>.</bold> Do not log out, or you may be banned."
+unfrozen-notify: "You have been unfrozen by <#ffc2c2>{staff}</#ffc2c2>."
+frozen-reminder: "<bold>You are frozen.</bold> Wait for staff and do not log out."
+frozen-blocked: "You cannot do that while frozen."
+broadcast-frozen: "<#ffc2c2>{player}</#ffc2c2> was frozen by <#ffc2c2>{staff}</#ffc2c2>."
+broadcast-unfrozen: "<#ffc2c2>{player}</#ffc2c2> was unfrozen by <#ffc2c2>{staff}</#ffc2c2>."
+frozen-logout: "<#ffc2c2>{player}</#ffc2c2> logged out while frozen!"
+frozen-logout-reason: "Logged out while frozen"
+discord-freeze-title: "Logged out while frozen"
+usage-freeze: 'Usage: /freeze \<player>'
+
+# Profile. Each line lists its own placeholders; active ban/mute lines use the punishment placeholders.
+profile-header: "<bold>Profile of <#ffc2c2>{player}</#ffc2c2></bold>"
+profile-account: "Status: <#ffc2c2>{status}</#ffc2c2>  <#8a8a8a>{uuid}</#8a8a8a>"
+profile-dates: "First join: <#ffc2c2>{first}</#ffc2c2>  Last seen: <#ffc2c2>{last}</#ffc2c2>"
+profile-network: "IPs used: <#ffc2c2>{ips}</#ffc2c2>  Alts: <#ffc2c2>{alts}</#ffc2c2> (/alts)"
+profile-punishments: "Bans <#ffc2c2>{bans}</#ffc2c2>  Mutes <#ffc2c2>{mutes}</#ffc2c2>  Kicks <#ffc2c2>{kicks}</#ffc2c2>  Warnings <#ffc2c2>{warns}</#ffc2c2> (/history)"
+profile-active-ban: "<bold>Banned</bold> by {staff} until {expires}: {reason}"
+profile-active-mute: "<bold>Muted</bold> by {staff} until {expires}: {reason}"
+profile-flags: "Anticheat flags: <#ffc2c2>{flags}</#ffc2c2>"
+usage-profile: 'Usage: /profile \<player>'
+
+# Alts. {player} {count} {alts}
+alts-join: "<#ffc2c2>{player}</#ffc2c2> shares an IP with {count} account(s): <#ffc2c2>{alts}</#ffc2c2>"
+alts-list: "Accounts sharing an IP with <#ffc2c2>{player}</#ffc2c2> ({count}): <#ffc2c2>{alts}</#ffc2c2>"
+alts-none: "<#ffc2c2>{player}</#ffc2c2> has no known alts."
+alt-banned-screen: "<bold><gradient:#7a0000:#ff2a2a>RAGE</gradient></bold>\n\n<#ff6b6b>Your connection is linked to a banned account.</#ff6b6b>\n\n<#8a8a8a>If you think this is a mistake, contact the staff team.</#8a8a8a>"
+alt-banned-alert: "<#ffc2c2>{player}</#ffc2c2> was refused: shares an IP with banned account <#ffc2c2>{alts}</#ffc2c2>."
+discord-alts-title: "Alt accounts detected"
+usage-alts: 'Usage: /alts \<player>'
+
+# Anti-bot. {player}
+bot-ip-screen: "<bold><gradient:#7a0000:#ff2a2a>RAGE</gradient></bold>\n\n<#ff6b6b>Too many accounts are online from your connection.</#ff6b6b>"
+bot-attack-screen: "<bold><gradient:#7a0000:#ff2a2a>RAGE</gradient></bold>\n\n<#ff6b6b>The server is under a bot attack.</#ff6b6b>\n\n<#8a8a8a>New players can join again in a minute.</#8a8a8a>"
+bot-attack-alert: "<bold>Join flood detected.</bold> First-time players are refused for a while."
+discord-bot-title: "Bot attack"
+
+# Anti-VPN. {player}
+vpn-screen: "<bold><gradient:#7a0000:#ff2a2a>RAGE</gradient></bold>\n\n<#ff6b6b>VPNs and proxies are not allowed on this server.</#ff6b6b>\n\n<#8a8a8a>Disconnect from your VPN and try again.</#8a8a8a>"
+vpn-error-screen: "<bold><gradient:#7a0000:#ff2a2a>RAGE</gradient></bold>\n\n<#ff6b6b>We could not check your connection right now.</#ff6b6b>\n\n<#8a8a8a>Please try again in a minute.</#8a8a8a>"
+vpn-alert: "<#ffc2c2>{player}</#ffc2c2> was refused: VPN or proxy connection."
+discord-vpn-title: "VPN blocked"
+
+# Crash exploits. {player} {check} {details}
+exploit-alert: "<#ffc2c2>{player}</#ffc2c2> attempted a <#ffc2c2>{check}</#ffc2c2>: {details}"
+exploit-reason: "Crash exploit attempt ({check})"
+discord-exploit-title: "Exploit blocked"
+
+# Discord posts for punishments use the broadcast-* messages above as the text.
+discord-punishment-title: "Punishment: {type}"

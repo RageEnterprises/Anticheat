@@ -55,6 +55,52 @@ checks:
     # Eye-to-hitbox distance. Vanilla is 3.0; the extra covers ping. Raise for high-ping players.
     max-distance: 3.5
 
+  nuker:
+    # Breaking many blocks at once, from too far away, or outside the player's view. Flagged breaks are cancelled.
+    enabled: true
+    # Vanilla instamining breaks at most one block per tick (20 per second). The extra covers lag bursts.
+    max-per-tick: 3
+    max-per-second: 22
+    # Eye to block centre. Vanilla reach is 4.5 plus up to 0.87 to the centre.
+    max-distance: 6.0
+    # Largest angle between the crosshair and the block centre, in degrees.
+    max-angle: 75
+
+  scaffold:
+    # Placing blocks against a face the player is not looking at (bridging cheats), or too fast.
+    enabled: true
+    # Flag after this many look/face mismatches within miss-window-ticks. One miss can be a turn while clicking.
+    max-misses: 3
+    miss-window-ticks: 60
+    # Holding right-click places 5 per second; fast clicking can reach about 15.
+    max-per-second: 20
+
+  killaura:
+    # Hitting targets outside the crosshair, or many different targets at once. Flagged hits are cancelled.
+    enabled: true
+    # Extra size added to the target hitbox for the crosshair test. Covers ping and target movement.
+    hitbox-expand: 0.5
+    # Flag after this many hits outside the crosshair within miss-window-ticks.
+    max-misses: 4
+    miss-window-ticks: 100
+    # Flag when more than this many different targets are hit within switch-window-ticks (10 = half a second).
+    max-targets: 3
+    switch-window-ticks: 10
+
+  xray:
+    # Mining far more hidden ores (not touching air or liquid) per stone than a normal player.
+    # Lucky players exist, so by default this only alerts staff. Paper's built-in anti-xray
+    # (paper-world-defaults.yml > anticheat.anti-xray) is the best way to stop X-ray itself.
+    enabled: true
+    # true: add a violation like the other checks (can lead to a kick). false: alert only.
+    punish: false
+    # Only judge after this many hidden ore veins.
+    min-ores: 4
+    # Alert when hidden ore veins per stone mined is above this. Branch mining is around 0.003.
+    max-ores-per-stone: 0.02
+    ores: [DIAMOND_ORE, DEEPSLATE_DIAMOND_ORE, EMERALD_ORE, DEEPSLATE_EMERALD_ORE, ANCIENT_DEBRIS]
+    stone: [STONE, DEEPSLATE, TUFF, GRANITE, DIORITE, ANDESITE, NETHERRACK, BASALT, BLACKSTONE]
+
 grace:
   # Ticks to skip all movement checks after knockback, damage, explosions, or server-applied velocity.
   knockback-ticks: 30
@@ -66,9 +112,104 @@ violations:
   # Kick when a player's violation level reaches this.
   kick-threshold: 20
   kick-enabled: true
+  # What happens at kick-threshold: kick, or ban (recorded in the player's punishment history).
+  action: kick
+  # Ban length when action is ban, like 1d, 7d, 30d or perm.
+  ban-duration: 7d
   # Violation level removed every second.
   decay-per-second: 0.5
 
 alerts:
   # Send alerts to online players with rageanticheat.alerts. Violations are always logged to the console.
   enabled: true
+
+exploits:
+  # Blocks crash exploits: oversized books, creative items with huge NBT data, oversized sign lines.
+  enabled: true
+  # ban, kick or none (alert only). Bans are recorded in the player's punishment history.
+  action: ban
+  ban-duration: perm
+  # Vanilla limits: 100 pages, 1024 characters per page, 32-character titles.
+  max-book-pages: 100
+  max-page-chars: 1024
+  max-title-chars: 32
+  # Largest serialized creative-mode item. A full shulker box of normal items is well under this.
+  max-item-bytes: 65536
+  # The vanilla client cannot type more than about 90 characters per line; the protocol allows 384.
+  max-sign-line-chars: 384
+
+moderation:
+  # Announce punishments to every player. false: only staff with rageanticheat.alerts see them.
+  broadcast: true
+  default-reason: "No reason given"
+  # Commands muted players cannot use, so they cannot get around a mute with private messages.
+  muted-blocked-commands: [msg, tell, w, whisper, me, r, reply, say, m, t]
+
+anti-bot:
+  enabled: true
+  # Accounts that may be online from one IP at the same time. 0 = no limit.
+  max-accounts-per-ip: 3
+  # Attack mode: when more than max-new-players first-time players connect within window-seconds,
+  # first-time players are refused for attack-mode-seconds. Players who joined before can always join.
+  max-new-players: 8
+  window-seconds: 10
+  attack-mode-seconds: 60
+
+anti-vpn:
+  # Refuse players who connect through a VPN or proxy. Uses proxycheck.io: each joining player's IP is
+  # sent to that service (cached for cache-hours). Behind BungeeCord/Velocity, enable IP forwarding.
+  enabled: false
+  # Optional free key from proxycheck.io for a higher daily limit (100 lookups/day without one).
+  api-key: ""
+  # Let players join when the lookup fails (timeout, daily limit). false refuses them instead.
+  allow-on-error: true
+  cache-hours: 24
+  # Names or UUIDs that may always join through a VPN.
+  allowed-players: []
+
+alts:
+  # Link accounts that have joined from the same IP.
+  enabled: true
+  # Tell staff (and the Discord webhook "joins" event) when a player with alts joins.
+  notify-staff: true
+  # Refuse to let a player join from an IP that a banned account has used (ban evasion).
+  # Off by default: families, schools and public Wi-Fi share IPs.
+  block-banned-alts: false
+
+freeze:
+  # Commands a frozen player may still use, e.g. to talk to staff.
+  allowed-commands: [msg, tell, r, reply]
+  # Ban a frozen player who logs out. Staff are always alerted.
+  ban-on-logout: false
+  ban-duration: perm
+
+discord:
+  webhook:
+    # Post alerts to a Discord channel. Create a webhook in Channel settings > Integrations > Webhooks.
+    enabled: false
+    url: ""
+    username: "RageAnticheat"
+    # Messages beyond this are dropped so a flood of alerts cannot get the webhook rate-limited.
+    max-per-minute: 20
+    # What to post: alerts (anticheat flags), punishments, joins (alts, VPN and bot blocks), exploits.
+    events: [alerts, punishments, joins, exploits]
+
+  bot:
+    # A Discord bot to moderate the server with slash commands (/ban, /mute, /kick, /warn, /unban,
+    # /unmute, /freeze, /clearchat, /profile, /history, /players). Create an application at
+    # https://discord.com/developers/applications, add a bot, copy its token, and invite it with the
+    # "bot" and "applications.commands" scopes. Keep the token secret: anyone with it controls the bot.
+    enabled: false
+    token: ""
+    # Right-click the server / role / channel with Developer Mode on (Discord settings > Advanced) to copy IDs.
+    guild-id: ""
+    # Members with this role can use the moderation commands.
+    staff-role-id: ""
+    # Members with this role can also use /console, if allow-console is true.
+    admin-role-id: ""
+    # Allow /console, which runs any server command as the console. Only enable this if you trust
+    # everyone with the admin role as much as server operators.
+    allow-console: false
+    # Channel for alert embeds (leave empty to not post), and which events to post there.
+    alert-channel-id: ""
+    events: [alerts, punishments, joins, exploits]
