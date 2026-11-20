@@ -43,11 +43,11 @@ final class RageCommand implements TabExecutor {
                 }
                 Player target = Bukkit.getPlayerExact(args[1]);
                 if (target == null) {
-                    sender.sendMessage(messages.get("player-not-found", args[1], null, -1));
+                    sender.sendMessage(messages.get("player-not-found", "player", args[1]));
                     return true;
                 }
                 plugin.forget(target);
-                sender.sendMessage(messages.get("reset", target.getName(), null, -1));
+                sender.sendMessage(messages.get("reset", "player", target.getName()));
             }
             default -> sender.sendMessage(messages.get("usage"));
         }
@@ -57,14 +57,14 @@ final class RageCommand implements TabExecutor {
     private void status(CommandSender sender, Messages messages) {
         for (Map.Entry<String, Boolean> check : plugin.settings().checks().entrySet()) {
             String key = check.getValue() ? "status-enabled" : "status-disabled";
-            sender.sendMessage(messages.get(key, null, check.getKey(), -1));
+            sender.sendMessage(messages.get(key, "check", check.getKey()));
         }
         boolean any = false;
         for (Map.Entry<UUID, PlayerData> entry : plugin.players().entrySet()) {
             int count = entry.getValue().violations.count();
             Player player = Bukkit.getPlayer(entry.getKey());
             if (count > 0 && player != null) {
-                sender.sendMessage(messages.get("status-player", player.getName(), null, count));
+                sender.sendMessage(messages.get("status-player", "player", player.getName(), "count", String.valueOf(count)));
                 any = true;
             }
         }

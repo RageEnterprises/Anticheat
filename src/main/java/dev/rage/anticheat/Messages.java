@@ -6,6 +6,7 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -31,21 +32,33 @@ final class Messages {
         yaml = loaded;
     }
 
-    Component get(String key) {
-        return get(key, null, null, -1);
-    }
-
-    /** Renders {@code key}; null placeholders (or count < 0) are left untouched. */
-    Component get(String key, String player, String check, int count) {
-        String message = yaml.getString(key, key);
-        message = replace(message, "{player}", player);
-        message = replace(message, "{check}", check);
-        message = replace(message, "{count}", count < 0 ? null : Integer.toString(count));
+    /**
+     * Renders {@code key} inside the shared format.
+     *
+     * @param placeholders name/value pairs, e.g. {@code "player", "Steve", "check", "Speed"} fills
+     *                     {player} and {check}. Values are escaped so they cannot inject formatting.
+     */
+    Component get(String key, String... placeholders) {
         String format = yaml.getString("format", "{message}");
-        return MINI.deserialize(format.replace("{message}", message));
+        return MINI.deserialize(format.replace("{message}", fill(key, placeholders)));
     }
 
-    private static String replace(String template, String placeholder, String value) {
-        return value == null ? template : template.replace(placeholder, MINI.escapeTags(value));
+    /** Renders {@code key} on its own, without the "RAGE →" format. Used for kick and ban screens. */
+    Component screen(String key, String... placeholders) {
+        return MINI.deserialize(fill(key, placeholders));
+    }
+
+    /** {@code key} as plain text without the format, for Discord. */
+    String plain(String key, String... placeholders) {
+        return PlainTextComponentSerializer.plainText().serialize(MINI.deserialize(fill(key, placeholders)));
+    }
+
+    private String fill(String key, String... placeholders) {
+        String message = yaml.getString(key, key);
+        for (int i = 0; i + 1 < placeholders.length; i += 2) {
+            String value = placeholders[i + 1];
+            message = message.replace("{" + placeholders[i] + "}", value == null ? "" : MINI.escapeTags(value));
+        }
+        return message;
     }
 }

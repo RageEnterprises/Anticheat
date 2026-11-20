@@ -1,20 +1,24 @@
 # RageAnticheat messages, in MiniMessage format: https://docs.advntr.dev/minimessage/format
-# Placeholders: {player}, {check}, {count}.
+# Colors are RGB hex codes (<#rrggbb>) and gradients (<gradient:#from:#to>), not the 16 default colors.
+# Placeholders are written as {name}; each message lists the ones it supports.
 #
-# Every message is placed into "format" at {message}. Change the colors here to retheme the plugin.
-format: "<dark_red><bold>RAGE → </bold></dark_red><red>{message}</red>"
+# Every chat message is placed into "format" at {message}. Change the colors here to retheme the plugin.
+format: "<bold><gradient:#7a0000:#ff2a2a>RAGE →</gradient></bold> <#ff6b6b>{message}</#ff6b6b>"
 
+# Names and values are highlighted with #ffc2c2. Search and replace it to change the highlight everywhere.
+
+# {player} {check} {count}
 kick: "Kicked for repeated movement violations."
-alert: "{player} failed {check} ({count} violations)."
+alert: "<#ffc2c2>{player}</#ffc2c2> failed <#ffc2c2>{check}</#ffc2c2> ({count} violations)."
 
 # A literal < must be written as \< so MiniMessage does not read it as a tag.
 usage: 'Usage: /rageanticheat \<reload|status|reset \<player>>'
 no-permission: "You do not have permission to do that."
 reload: "Configuration and messages reloaded."
-reset: "Reset violations for {player}."
-player-not-found: "{player} is not online."
+reset: "Reset violations for <#ffc2c2>{player}</#ffc2c2>."
+player-not-found: "<#ffc2c2>{player}</#ffc2c2> is not online."
 
-status-enabled: "{check} check: enabled"
-status-disabled: "{check} check: disabled"
-status-player: "{player}: {count} violations"
+status-enabled: "{check} check: <#7dff9a>enabled</#7dff9a>"
+status-disabled: "{check} check: <#8a8a8a>disabled</#8a8a8a>"
+status-player: "<#ffc2c2>{player}</#ffc2c2>: {count} violations"
 status-none: "No players have active violations."

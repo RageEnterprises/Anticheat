@@ -105,7 +105,7 @@ public final class RageAnticheat extends JavaPlugin {
         getLogger().info(String.format("%s failed %s (%s) vl=%.1f", player.getName(), check, details, level));
 
         if (settings.alertsEnabled()) {
-            Component alert = messages.get("alert", player.getName(), check, count);
+            Component alert = messages.get("alert", "player", player.getName(), "check", check, "count", String.valueOf(count));
             for (Player staff : Bukkit.getOnlinePlayers()) {
                 if (staff.hasPermission(ALERTS)) {
                     staff.sendMessage(alert);
@@ -115,7 +115,7 @@ public final class RageAnticheat extends JavaPlugin {
 
         if (settings.kickEnabled() && d.violations.reached(settings.kickThreshold())) {
             d.violations.reset();
-            Component reason = messages.get("kick", player.getName(), check, count);
+            Component reason = messages.get("kick", "player", player.getName(), "check", check, "count", String.valueOf(count));
             getLogger().info(player.getName() + " kicked for " + check + " violations");
             // Kick on the next tick rather than in the middle of handling the move packet.
             getServer().getScheduler().runTask(this, () -> {
