@@ -4,6 +4,7 @@ import dev.rage.anticheat.discord.DiscordWebhook;
 import dev.rage.anticheat.moderation.Database;
 import dev.rage.anticheat.logic.Durations;
 import dev.rage.anticheat.moderation.ChatListener;
+import dev.rage.anticheat.moderation.Freeze;
 import dev.rage.anticheat.moderation.LoginListener;
 import dev.rage.anticheat.moderation.Moderation;
 import dev.rage.anticheat.moderation.ModerationCommand;
@@ -32,6 +33,7 @@ public final class RageAnticheat extends JavaPlugin {
     private DiscordWebhook webhook;
     private Database database;
     private Moderation moderation;
+    private Freeze freeze;
     private final Set<String> webhookEvents = new HashSet<>();
 
     /** Embed colors for Discord, matching the red theme. */
@@ -59,6 +61,13 @@ public final class RageAnticheat extends JavaPlugin {
         moderation = new Moderation(this);
         getServer().getPluginManager().registerEvents(new LoginListener(this, moderation), this);
         getServer().getPluginManager().registerEvents(new ChatListener(this, moderation), this);
+        freeze = new Freeze(this);
+        getServer().getPluginManager().registerEvents(freeze, this);
+        PluginCommand freezeCommand = getCommand("freeze");
+        if (freezeCommand != null) {
+            freezeCommand.setExecutor(freeze);
+            freezeCommand.setTabCompleter(freeze);
+        }
         ModerationCommand moderationCommand = new ModerationCommand(this, moderation);
         for (String name : ModerationCommand.COMMANDS) {
             PluginCommand modCommand = getCommand(name);
@@ -111,6 +120,10 @@ public final class RageAnticheat extends JavaPlugin {
 
     public Moderation moderation() {
         return moderation;
+    }
+
+    public Freeze freeze() {
+        return freeze;
     }
 
     public Database database() {

@@ -145,6 +145,13 @@ moderation:
   # Commands muted players cannot use, so they cannot get around a mute with private messages.
   muted-blocked-commands: [msg, tell, w, whisper, me, r, reply, say, m, t]
 
+freeze:
+  # Commands a frozen player may still use, e.g. to talk to staff.
+  allowed-commands: [msg, tell, r, reply]
+  # Ban a frozen player who logs out. Staff are always alerted.
+  ban-on-logout: false
+  ban-duration: perm
+
 discord:
   webhook:
     # Post alerts to a Discord channel. Create a webhook in Channel settings > Integrations > Webhooks.

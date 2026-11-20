@@ -40,6 +40,10 @@ commands:
     description: Clear the chat for everyone.
     usage: /clearchat
     aliases: [cc, chatclear]
+  freeze:
+    description: Freeze or unfreeze a player.
+    usage: /freeze <player>
+    aliases: [ss, unfreeze]
   history:
     description: Show a player's punishment history.
     usage: /history <player>
@@ -70,6 +74,7 @@ permissions:
       rageanticheat.mod.unmute: true
       rageanticheat.mod.clearchat: true
       rageanticheat.mod.history: true
+      rageanticheat.mod.freeze: true
   rageanticheat.mod.exempt:
     description: Cannot be punished by other players (the console still can).
     default: false

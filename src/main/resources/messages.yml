@@ -67,6 +67,18 @@ usage-unban: 'Usage: /unban \<player>'
 usage-unmute: 'Usage: /unmute \<player>'
 usage-history: 'Usage: /history \<player>'
 
+# Freeze. {player} {staff}
+frozen-notify: "<bold>You have been frozen by <#ffc2c2>{staff}</#ffc2c2>.</bold> Do not log out, or you may be banned."
+unfrozen-notify: "You have been unfrozen by <#ffc2c2>{staff}</#ffc2c2>."
+frozen-reminder: "<bold>You are frozen.</bold> Wait for staff and do not log out."
+frozen-blocked: "You cannot do that while frozen."
+broadcast-frozen: "<#ffc2c2>{player}</#ffc2c2> was frozen by <#ffc2c2>{staff}</#ffc2c2>."
+broadcast-unfrozen: "<#ffc2c2>{player}</#ffc2c2> was unfrozen by <#ffc2c2>{staff}</#ffc2c2>."
+frozen-logout: "<#ffc2c2>{player}</#ffc2c2> logged out while frozen!"
+frozen-logout-reason: "Logged out while frozen"
+discord-freeze-title: "Logged out while frozen"
+usage-freeze: 'Usage: /freeze \<player>'
+
 # Crash exploits. {player} {check} {details}
 exploit-alert: "<#ffc2c2>{player}</#ffc2c2> attempted a <#ffc2c2>{check}</#ffc2c2>: {details}"
 exploit-reason: "Crash exploit attempt ({check})"
