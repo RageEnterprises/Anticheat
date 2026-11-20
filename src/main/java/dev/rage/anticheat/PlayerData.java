@@ -50,12 +50,18 @@ final class PlayerData {
         placeMisses = new EventWindow(s.scaffold().maxMisses() + 1);
         attackMisses = new EventWindow(s.killAura().maxMisses() + 1);
         attackTargets = new TargetTracker(s.killAura().maxTargets() + 1);
+        crystalBreaks = new EventWindow(s.crystal().maxBreaksPerSecond() + 1);
+        crystalPlaces = new EventWindow(s.crystal().maxPlacesPerSecond() + 1);
         clicks = new ClickStats(Math.max(s.autoClicker().samples(), s.autoClicker().maxCps()) + 2);
     }
 
     /** Recent arm swings that did not hit a block, for AutoClicker. */
     final ClickStats clicks;
     long lastDropNanos = Long.MIN_VALUE / 2;
+
+    /** End crystals broken and placed recently, for CrystalAura. */
+    final EventWindow crystalBreaks;
+    final EventWindow crystalPlaces;
 
     /** Hits outside the crosshair, and recent attack targets, for KillAura. */
     final EventWindow attackMisses;

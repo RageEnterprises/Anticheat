@@ -4,6 +4,7 @@ import dev.rage.anticheat.logic.Reach;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
+import org.bukkit.entity.EnderCrystal;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -11,13 +12,14 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
+import org.bukkit.event.entity.EntityPlaceEvent;
 import org.bukkit.event.player.PlayerAnimationEvent;
 import org.bukkit.event.player.PlayerAnimationType;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.util.BoundingBox;
 import org.bukkit.util.Vector;
 
-/** Melee checks: Reach and KillAura (flagged hits are cancelled) and AutoClicker. */
+/** Melee checks: Reach, KillAura and CrystalAura (flagged hits are cancelled) and AutoClicker. */
 final class CombatListener implements Listener {
 
     private final RageAnticheat plugin;
@@ -50,7 +52,10 @@ final class CombatListener implements Listener {
                 details = String.format("distance=%.2f max=%.2f", distance, s.reachMaxDistance());
             }
         }
-        if (check == null && s.killAura().enabled()) {
+        if (check == null && target instanceof EnderCrystal crystal && s.crystal().enabled()) {
+            details = crystalBreak(player, d, s, crystal, eye, box);
+            check = details == null ? null : "CrystalAura";
+        } else if (check == null && s.killAura().enabled()) {
             details = killAura(d, s.killAura(), eye, box, target);
             check = details == null ? null : "KillAura";
         }
@@ -58,6 +63,58 @@ final class CombatListener implements Listener {
             event.setCancelled(true);
             plugin.flag(player, d, check, details);
         }
+    }
+
+    /**
+     * A crystal's spawn packet goes out on the server tick after it is placed and takes half the
+     * ping to arrive; the hit takes the other half to come back. A hit sooner than that is aimed
+     * at a predicted entity ID, which only cheats do. Fast clicking is limited by rate instead.
+     */
+    private static String crystalBreak(Player player, PlayerData d, Settings s, EnderCrystal crystal,
+                                       Location eye, BoundingBox box) {
+        int age = crystal.getTicksLived();
+        int ping = player.getPing();
+        if (age == 0 || age * 50 + 50 < ping) {
+            return String.format("hit a crystal %d ticks after it spawned, before the client could see it (ping %d ms)",
+                    age, ping);
+        }
+        int now = Bukkit.getCurrentTick();
+        int perSecond = d.crystalBreaks.record(now, 20);
+        if (perSecond > s.crystal().maxBreaksPerSecond()) {
+            return perSecond + " crystals broken in one second";
+        }
+        if (!s.killAura().enabled() || inCrosshair(eye, box, s.killAura().hitboxExpand())) {
+            return null;
+        }
+        int misses = d.attackMisses.record(now, s.killAura().missWindowTicks());
+        if (misses < s.killAura().maxMisses()) {
+            return null;
+        }
+        d.attackMisses.clear();
+        return String.format("%d crystal hits outside the crosshair within %d ticks", misses,
+                s.killAura().missWindowTicks());
+    }
+
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onPlace(EntityPlaceEvent event) {
+        Player player = event.getPlayer();
+        Settings s = plugin.settings();
+        if (!(event.getEntity() instanceof EnderCrystal) || player == null || !s.crystal().enabled()
+                || player.getGameMode() == GameMode.CREATIVE || player.hasPermission(MovementListener.BYPASS)) {
+            return;
+        }
+        PlayerData d = plugin.data(player);
+        int perSecond = d.crystalPlaces.record(Bukkit.getCurrentTick(), 20);
+        if (perSecond > s.crystal().maxPlacesPerSecond()) {
+            event.setCancelled(true);
+            plugin.flag(player, d, "CrystalAura", perSecond + " crystals placed in one second");
+        }
+    }
+
+    private static boolean inCrosshair(Location eye, BoundingBox box, double expand) {
+        Vector start = eye.toVector();
+        BoundingBox expanded = box.clone().expand(expand);
+        return expanded.contains(start) || expanded.rayTrace(start, eye.getDirection(), 8.0) != null;
     }
 
     /** Survival block reach; a swing at a block this close is mining or placing, not a click. */
@@ -127,10 +184,7 @@ final class CombatListener implements Listener {
             return String.format("hit %d different targets within %d ticks", targets, k.switchWindowTicks());
         }
 
-        Vector start = eye.toVector();
-        Vector direction = eye.getDirection();
-        BoundingBox expanded = targetBox.clone().expand(k.hitboxExpand());
-        if (expanded.contains(start) || expanded.rayTrace(start, direction, 8.0) != null) {
+        if (inCrosshair(eye, targetBox, k.hitboxExpand())) {
             return null;
         }
         int misses = d.attackMisses.record(now, k.missWindowTicks());

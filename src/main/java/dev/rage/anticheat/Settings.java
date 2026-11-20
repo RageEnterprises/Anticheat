@@ -40,7 +40,17 @@ record Settings(
         Scaffold scaffold,
         KillAura killAura,
         Xray xray,
-        AutoClicker autoClicker) {
+        AutoClicker autoClicker,
+        Crystal crystal) {
+
+    /** Crystal aura: breaking end crystals faster than the client could see them, or too many per second. */
+    record Crystal(boolean enabled, int maxBreaksPerSecond, int maxPlacesPerSecond) {
+        static Crystal from(ConfigurationSection c) {
+            return new Crystal(c.getBoolean("enabled", true),
+                    Math.max(1, c.getInt("max-breaks-per-second", 12)),
+                    Math.max(1, c.getInt("max-places-per-second", 12)));
+        }
+    }
 
     /** Clicking faster than people can, or at a machine-like even rhythm. */
     record AutoClicker(boolean enabled, int maxCps, int samples, double minDeviationMs, int minCps) {
@@ -151,7 +161,8 @@ record Settings(
                 Scaffold.from(section(c, "checks.scaffold")),
                 KillAura.from(section(c, "checks.killaura")),
                 Xray.from(section(c, "checks.xray"), logger),
-                AutoClicker.from(section(c, "checks.autoclicker")));
+                AutoClicker.from(section(c, "checks.autoclicker")),
+                Crystal.from(section(c, "checks.crystal")));
     }
 
     /** Check name to enabled state, in display order. */
@@ -170,6 +181,7 @@ record Settings(
         checks.put("KillAura", killAura.enabled());
         checks.put("Xray", xray.enabled());
         checks.put("AutoClicker", autoClicker.enabled());
+        checks.put("CrystalAura", crystal.enabled());
         return checks;
     }
 }

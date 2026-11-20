@@ -115,6 +115,14 @@ checks:
     # Only judge the rhythm while clicking at least this fast.
     min-cps: 8
 
+  crystal:
+    # Crystal aura: breaking an end crystal before the client could have seen it spawn (ID
+    # prediction), or placing/breaking crystals faster than people can. Flagged actions are cancelled.
+    # Crystal hits also get the KillAura crosshair test.
+    enabled: true
+    max-breaks-per-second: 12
+    max-places-per-second: 12
+
 grace:
   # Ticks to skip all movement checks after knockback, damage, explosions, or server-applied velocity.
   knockback-ticks: 30
