@@ -13,8 +13,7 @@ alert: "<#ffc2c2>{player}</#ffc2c2> failed <#ffc2c2>{check}</#ffc2c2> ({count} v
 
 # Discord webhook / bot posts (plain text, formatting tags are removed). {player} {check} {count} {details}
 discord-alert-title: "Anticheat alert"
-discord-alert: "{player} failed {check} ({count} violations)
-{details}"
+discord-alert: "{player} failed {check} ({count} violations)\n{details}"
 
 # A literal < must be written as \< so MiniMessage does not read it as a tag.
 usage: 'Usage: /rageanticheat \<reload|status|reset \<player>>'
