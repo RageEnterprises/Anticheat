@@ -9,6 +9,7 @@ import dev.rage.anticheat.moderation.Freeze;
 import dev.rage.anticheat.moderation.LoginListener;
 import dev.rage.anticheat.moderation.Moderation;
 import dev.rage.anticheat.moderation.ModerationCommand;
+import dev.rage.anticheat.moderation.Profiles;
 import dev.rage.anticheat.moderation.Punishment;
 import dev.rage.anticheat.moderation.PlayerStore;
 import java.io.File;
@@ -35,6 +36,7 @@ public final class RageAnticheat extends JavaPlugin {
     private Database database;
     private Moderation moderation;
     private Freeze freeze;
+    private Profiles profiles;
     private final Set<String> webhookEvents = new HashSet<>();
 
     /** Embed colors for Discord, matching the red theme. */
@@ -61,6 +63,12 @@ public final class RageAnticheat extends JavaPlugin {
         reload();
         moderation = new Moderation(this);
         Alts alts = new Alts(this);
+        profiles = new Profiles(this);
+        PluginCommand profileCommand = getCommand("profile");
+        if (profileCommand != null) {
+            profileCommand.setExecutor(profiles);
+            profileCommand.setTabCompleter(profiles);
+        }
         PluginCommand altsCommand = getCommand("alts");
         if (altsCommand != null) {
             altsCommand.setExecutor(alts);
@@ -131,6 +139,10 @@ public final class RageAnticheat extends JavaPlugin {
 
     public Freeze freeze() {
         return freeze;
+    }
+
+    public Profiles profiles() {
+        return profiles;
     }
 
     public Database database() {

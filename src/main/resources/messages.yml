@@ -79,6 +79,17 @@ frozen-logout-reason: "Logged out while frozen"
 discord-freeze-title: "Logged out while frozen"
 usage-freeze: 'Usage: /freeze \<player>'
 
+# Profile. Each line lists its own placeholders; active ban/mute lines use the punishment placeholders.
+profile-header: "<bold>Profile of <#ffc2c2>{player}</#ffc2c2></bold>"
+profile-account: "Status: <#ffc2c2>{status}</#ffc2c2>  <#8a8a8a>{uuid}</#8a8a8a>"
+profile-dates: "First join: <#ffc2c2>{first}</#ffc2c2>  Last seen: <#ffc2c2>{last}</#ffc2c2>"
+profile-network: "IPs used: <#ffc2c2>{ips}</#ffc2c2>  Alts: <#ffc2c2>{alts}</#ffc2c2> (/alts)"
+profile-punishments: "Bans <#ffc2c2>{bans}</#ffc2c2>  Mutes <#ffc2c2>{mutes}</#ffc2c2>  Kicks <#ffc2c2>{kicks}</#ffc2c2>  Warnings <#ffc2c2>{warns}</#ffc2c2> (/history)"
+profile-active-ban: "<bold>Banned</bold> by {staff} until {expires}: {reason}"
+profile-active-mute: "<bold>Muted</bold> by {staff} until {expires}: {reason}"
+profile-flags: "Anticheat flags: <#ffc2c2>{flags}</#ffc2c2>"
+usage-profile: 'Usage: /profile \<player>'
+
 # Alts. {player} {count} {alts}
 alts-join: "<#ffc2c2>{player}</#ffc2c2> shares an IP with {count} account(s): <#ffc2c2>{alts}</#ffc2c2>"
 alts-list: "Accounts sharing an IP with <#ffc2c2>{player}</#ffc2c2> ({count}): <#ffc2c2>{alts}</#ffc2c2>"
