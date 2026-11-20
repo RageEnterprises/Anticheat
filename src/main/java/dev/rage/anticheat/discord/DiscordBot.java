@@ -30,6 +30,7 @@ import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
+import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import org.bukkit.Bukkit;
@@ -122,6 +123,9 @@ public final class DiscordBot extends ListenerAdapter implements AutoCloseable {
         list.add(Commands.slash("history", "Show a player's punishment history")
                 .addOption(OptionType.STRING, "player", "Player name", true));
         list.add(Commands.slash("players", "List online players"));
+        list.add(Commands.slash("maintenance", "Turn maintenance mode on or off")
+                .addOptions(new OptionData(OptionType.STRING, "state", "on or off", true)
+                        .addChoice("on", "on").addChoice("off", "off")));
         if (allowConsole) {
             list.add(Commands.slash("console", "Run a server console command (admin role only)")
                     .addOption(OptionType.STRING, "command", "Command without the leading /", true));
@@ -168,6 +172,16 @@ public final class DiscordBot extends ListenerAdapter implements AutoCloseable {
                     names.add(p.getName());
                 }
                 reply.accept(names.size() + " online: " + (names.isEmpty() ? "nobody" : String.join(", ", names)));
+                return;
+            }
+            case "maintenance" -> {
+                boolean on = string(event, "state", "on").equals("on");
+                if (on == plugin.maintenance().enabled()) {
+                    reply.accept(messages.plain(on ? "maintenance-already-on" : "maintenance-already-off"));
+                } else {
+                    plugin.maintenance().set(on, staff);
+                    reply.accept(messages.plain(on ? "maintenance-on" : "maintenance-off", "staff", staff));
+                }
                 return;
             }
             case "console" -> {

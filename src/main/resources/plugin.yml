@@ -56,6 +56,9 @@ commands:
     description: Show a player's punishment history.
     usage: /history <player>
     aliases: [punishments]
+  maintenance:
+    description: Turn maintenance mode on or off and manage who may join during it.
+    usage: /maintenance <on|off|add|remove|list> [player]
 
 permissions:
   rageanticheat.admin:
@@ -88,6 +91,9 @@ permissions:
   rageanticheat.mod.exempt:
     description: Cannot be punished by other players (the console still can).
     default: false
+  rageanticheat.maintenance:
+    description: Use /maintenance.
+    default: op
   rageanticheat.chat.bypass:
     description: Not limited by the chat spam filter.
     default: op

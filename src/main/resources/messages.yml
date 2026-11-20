@@ -121,3 +121,20 @@ discord-exploit-title: "Exploit blocked"
 
 # Discord posts for punishments use the broadcast-* messages above as the text.
 discord-punishment-title: "Punishment: {type}"
+
+# Maintenance. {staff} {player} {status} {count} {players}
+maintenance-screen: "<bold><gradient:#7a0000:#ff2a2a>RAGE</gradient></bold>\n\n<#ff6b6b>The server is down for maintenance.</#ff6b6b>\n\n<#8a8a8a>Please try again later.</#8a8a8a>"
+# Shown in the server list. The version text replaces the ping bars and only supports the 16 legacy colors.
+maintenance-version: "<red>Maintenance"
+maintenance-motd: "<bold><gradient:#7a0000:#ff2a2a>RAGE</gradient></bold> <#ff6b6b>Down for maintenance</#ff6b6b>\n<#8a8a8a>We will be back soon.</#8a8a8a>"
+maintenance-on: "Maintenance mode <#ffc2c2>enabled</#ffc2c2> by <#ffc2c2>{staff}</#ffc2c2>. Only ops and whitelisted players can join."
+maintenance-off: "Maintenance mode <#ffc2c2>disabled</#ffc2c2> by <#ffc2c2>{staff}</#ffc2c2>."
+maintenance-already-on: "Maintenance mode is already on."
+maintenance-already-off: "Maintenance mode is already off."
+maintenance-added: "<#ffc2c2>{player}</#ffc2c2> can now join during maintenance."
+maintenance-already-added: "<#ffc2c2>{player}</#ffc2c2> is already on the maintenance whitelist."
+maintenance-removed: "<#ffc2c2>{player}</#ffc2c2> was removed from the maintenance whitelist."
+maintenance-not-listed: "<#ffc2c2>{player}</#ffc2c2> is not on the maintenance whitelist."
+maintenance-list: "Maintenance is <#ffc2c2>{status}</#ffc2c2>. Whitelist ({count}): <#ffc2c2>{players}</#ffc2c2>"
+discord-maintenance-title: "Maintenance mode"
+usage-maintenance: 'Usage: /maintenance \<on|off|add|remove|list> [player]'
