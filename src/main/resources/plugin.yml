@@ -2,7 +2,11 @@ name: RageAnticheat
 version: ${version}
 main: dev.rage.anticheat.RageAnticheat
 api-version: '1.20'
-description: Lightweight flight and speed checks.
+description: Lightweight anti-cheat and moderation.
+
+# Downloaded by Paper from Maven Central on first start, so the jar itself stays small.
+libraries:
+  - org.xerial:sqlite-jdbc:3.46.1.3
 
 commands:
   rageanticheat:

@@ -1,6 +1,11 @@
 package dev.rage.anticheat;
 
 import dev.rage.anticheat.discord.DiscordWebhook;
+import dev.rage.anticheat.moderation.Database;
+import dev.rage.anticheat.moderation.LoginListener;
+import dev.rage.anticheat.moderation.PlayerStore;
+import java.io.File;
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -20,6 +25,7 @@ public final class RageAnticheat extends JavaPlugin {
     private final Messages messages = new Messages();
     private Settings settings;
     private DiscordWebhook webhook;
+    private Database database;
     private final Set<String> webhookEvents = new HashSet<>();
 
     /** Embed colors for Discord, matching the red theme. */
@@ -35,7 +41,16 @@ public final class RageAnticheat extends JavaPlugin {
     @Override
     public void onEnable() {
         saveDefaultConfig();
+        try {
+            database = Database.open(new File(getDataFolder(), "data.db"), getLogger());
+        } catch (SQLException e) {
+            // Bans and mutes must not silently stop working, so refuse to run without storage.
+            getLogger().severe("Could not open the database, disabling RageAnticheat: " + e.getMessage());
+            getServer().getPluginManager().disablePlugin(this);
+            return;
+        }
         reload();
+        getServer().getPluginManager().registerEvents(new LoginListener(this), this);
         getServer().getPluginManager().registerEvents(new MovementListener(this), this);
         getServer().getPluginManager().registerEvents(new CombatListener(this), this);
         getServer().getPluginManager().registerEvents(new BlockListener(this), this);
@@ -72,6 +87,13 @@ public final class RageAnticheat extends JavaPlugin {
         if (webhook != null) {
             webhook.close();
         }
+        if (database != null) {
+            database.close();
+        }
+    }
+
+    public Database database() {
+        return database;
     }
 
     /** Re-reads config.yml and messages.yml. Player state is dropped because buffer sizes may change. */
@@ -119,7 +141,7 @@ public final class RageAnticheat extends JavaPlugin {
         return settings;
     }
 
-    Messages messages() {
+    public Messages messages() {
         return messages;
     }
 
@@ -166,6 +188,11 @@ public final class RageAnticheat extends JavaPlugin {
         int count = d.violations.count();
         getLogger().info(String.format("%s failed %s (%s) vl=%.1f", player.getName(), check, details, level));
         alert(player, check, details, String.valueOf(count));
+        long now = System.currentTimeMillis();
+        database.submit(c -> {
+            PlayerStore.recordFlag(c, player.getUniqueId(), check, details, now);
+            return null;
+        });
 
         if (settings.kickEnabled() && d.violations.reached(settings.kickThreshold())) {
             d.violations.reset();

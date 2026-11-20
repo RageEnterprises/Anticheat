@@ -11,7 +11,7 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
 /** Loads messages.yml and renders templates through the shared "RAGE → {message}" format. */
-final class Messages {
+public final class Messages {
 
     private static final MiniMessage MINI = MiniMessage.miniMessage();
 
@@ -38,18 +38,18 @@ final class Messages {
      * @param placeholders name/value pairs, e.g. {@code "player", "Steve", "check", "Speed"} fills
      *                     {player} and {check}. Values are escaped so they cannot inject formatting.
      */
-    Component get(String key, String... placeholders) {
+    public Component get(String key, String... placeholders) {
         String format = yaml.getString("format", "{message}");
         return MINI.deserialize(format.replace("{message}", fill(key, placeholders)));
     }
 
     /** Renders {@code key} on its own, without the "RAGE →" format. Used for kick and ban screens. */
-    Component screen(String key, String... placeholders) {
+    public Component screen(String key, String... placeholders) {
         return MINI.deserialize(fill(key, placeholders));
     }
 
     /** {@code key} as plain text without the format, for Discord. */
-    String plain(String key, String... placeholders) {
+    public String plain(String key, String... placeholders) {
         return PlainTextComponentSerializer.plainText().serialize(MINI.deserialize(fill(key, placeholders)));
     }
 
