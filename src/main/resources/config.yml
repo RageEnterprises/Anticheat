@@ -72,3 +72,14 @@ violations:
 alerts:
   # Send alerts to online players with rageanticheat.alerts. Violations are always logged to the console.
   enabled: true
+
+discord:
+  webhook:
+    # Post alerts to a Discord channel. Create a webhook in Channel settings > Integrations > Webhooks.
+    enabled: false
+    url: ""
+    username: "RageAnticheat"
+    # Messages beyond this are dropped so a flood of alerts cannot get the webhook rate-limited.
+    max-per-minute: 20
+    # What to post: alerts (anticheat flags), punishments, joins (alts, VPN and bot blocks), exploits.
+    events: [alerts, punishments, joins, exploits]

@@ -1,7 +1,10 @@
 package dev.rage.anticheat;
 
+import dev.rage.anticheat.discord.DiscordWebhook;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
@@ -16,6 +19,13 @@ public final class RageAnticheat extends JavaPlugin {
     private final Map<UUID, PlayerData> players = new HashMap<>();
     private final Messages messages = new Messages();
     private Settings settings;
+    private DiscordWebhook webhook;
+    private final Set<String> webhookEvents = new HashSet<>();
+
+    /** Embed colors for Discord, matching the red theme. */
+    public static final int COLOR_ALERT = 0xFF2A2A;
+    public static final int COLOR_PUNISH = 0x7A0000;
+    public static final int COLOR_INFO = 0xFF8A8A;
 
     private static final long LAG_TICK_NANOS = 100_000_000L;
     private static final long LAG_RECOVERY_NANOS = 2_000_000_000L;
@@ -58,6 +68,9 @@ public final class RageAnticheat extends JavaPlugin {
     @Override
     public void onDisable() {
         players.clear();
+        if (webhook != null) {
+            webhook.close();
+        }
     }
 
     /** Re-reads config.yml and messages.yml. Player state is dropped because buffer sizes may change. */
@@ -66,6 +79,39 @@ public final class RageAnticheat extends JavaPlugin {
         settings = Settings.from(getConfig());
         messages.load(this);
         players.clear();
+
+        if (webhook != null) {
+            webhook.close();
+            webhook = null;
+        }
+        webhookEvents.clear();
+        if (getConfig().getBoolean("discord.webhook.enabled")) {
+            webhook = DiscordWebhook.create(getConfig().getString("discord.webhook.url"),
+                    getConfig().getString("discord.webhook.username", "RageAnticheat"),
+                    getConfig().getInt("discord.webhook.max-per-minute", 20), getLogger());
+            webhookEvents.addAll(getConfig().getStringList("discord.webhook.events"));
+        }
+    }
+
+    /**
+     * Posts to Discord if the webhook is enabled for {@code event}.
+     *
+     * @param event one of alerts, punishments, joins, exploits
+     */
+    public void notifyDiscord(String event, String title, String description, int color) {
+        if (webhook != null && webhookEvents.contains(event)) {
+            webhook.send(title, description, color);
+        }
+    }
+
+    /** Sends {@code message} to every online player with rageanticheat.alerts, and to the console. */
+    public void broadcastStaff(Component message) {
+        for (Player staff : Bukkit.getOnlinePlayers()) {
+            if (staff.hasPermission(ALERTS)) {
+                staff.sendMessage(message);
+            }
+        }
+        Bukkit.getConsoleSender().sendMessage(message);
     }
 
     Settings settings() {
@@ -104,14 +150,18 @@ public final class RageAnticheat extends JavaPlugin {
         int count = d.violations.count();
         getLogger().info(String.format("%s failed %s (%s) vl=%.1f", player.getName(), check, details, level));
 
+        String[] placeholders = {"player", player.getName(), "check", check, "count", String.valueOf(count),
+                "details", details};
         if (settings.alertsEnabled()) {
-            Component alert = messages.get("alert", "player", player.getName(), "check", check, "count", String.valueOf(count));
+            Component alert = messages.get("alert", placeholders);
             for (Player staff : Bukkit.getOnlinePlayers()) {
                 if (staff.hasPermission(ALERTS)) {
                     staff.sendMessage(alert);
                 }
             }
         }
+        notifyDiscord("alerts", messages.plain("discord-alert-title", placeholders),
+                messages.plain("discord-alert", placeholders), COLOR_ALERT);
 
         if (settings.kickEnabled() && d.violations.reached(settings.kickThreshold())) {
             d.violations.reset();
