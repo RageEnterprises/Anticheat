@@ -221,6 +221,16 @@ checks:
     # Two such clicks within a second flag, and the click is cancelled.
     enabled: true
 
+  aim:
+    # Mouse input turns the camera in whole steps of the player's sensitivity; aimbots and bots
+    # (Baritone) compute rotations that are not. Reported as Aim within 3 seconds of an attack and
+    # as Bot otherwise, at most once per 30 seconds per player.
+    enabled: true
+    # Pitch changes collected before each judgement.
+    samples: 30
+    # Cinematic camera and some zoom mods also smooth the camera, so this only alerts staff unless true.
+    punish: false
+
 grace:
   # Ticks to skip all movement checks after knockback, damage, explosions, or server-applied velocity.
   knockback-ticks: 30

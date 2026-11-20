@@ -56,7 +56,16 @@ record Settings(
         Criticals criticals,
         ChestStealer chestStealer,
         AutoArmor autoArmor,
-        boolean inventoryMoveEnabled) {
+        boolean inventoryMoveEnabled,
+        Aim aim) {
+
+    /** Rotations that are not whole mouse steps: aimbots in combat, bots such as Baritone elsewhere. */
+    record Aim(boolean enabled, int samples, boolean punish) {
+        static Aim from(ConfigurationSection c) {
+            return new Aim(c.getBoolean("enabled", true), Math.max(10, c.getInt("samples", 30)),
+                    c.getBoolean("punish", false));
+        }
+    }
 
     /** Putting on armor pieces faster than a person can click them. */
     record AutoArmor(boolean enabled, long minIntervalMs) {
@@ -278,7 +287,8 @@ record Settings(
                 Criticals.from(section(c, "checks.criticals")),
                 ChestStealer.from(section(c, "checks.cheststealer")),
                 AutoArmor.from(section(c, "checks.autoarmor")),
-                c.getBoolean("checks.inventorymove.enabled", true));
+                c.getBoolean("checks.inventorymove.enabled", true),
+                Aim.from(section(c, "checks.aim")));
     }
 
     /** Check name to enabled state, in display order. */
@@ -315,6 +325,8 @@ record Settings(
         checks.put("ChestStealer", chestStealer.enabled());
         checks.put("AutoArmor", autoArmor.enabled());
         checks.put("InventoryMove", inventoryMoveEnabled);
+        checks.put("Aim", aim.enabled());
+        checks.put("Bot", aim.enabled());
         return checks;
     }
 }

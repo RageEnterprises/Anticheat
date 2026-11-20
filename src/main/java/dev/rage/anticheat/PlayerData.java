@@ -1,5 +1,6 @@
 package dev.rage.anticheat;
 
+import dev.rage.anticheat.logic.AimGcd;
 import dev.rage.anticheat.logic.ClickStats;
 import dev.rage.anticheat.logic.EventWindow;
 import dev.rage.anticheat.logic.KnockbackRun;
@@ -89,6 +90,7 @@ final class PlayerData {
         attackTargets = new TargetTracker(s.killAura().maxTargets() + 1);
         crystalBreaks = new EventWindow(s.crystal().maxBreaksPerSecond() + 1);
         crystalPlaces = new EventWindow(s.crystal().maxPlacesPerSecond() + 1);
+        aim = new AimGcd(s.aim().samples());
         clicks = new ClickStats(Math.max(s.autoClicker().samples(), s.autoClicker().maxCps()) + 2);
     }
 
@@ -109,6 +111,11 @@ final class PlayerData {
 
     /** When the open container was opened (0 when its first click was seen), for ChestStealer. */
     long containerOpenNanos;
+    /** Aim and Bot: recent pitch changes, the last attack, and the last alert. */
+    final AimGcd aim;
+    long lastAttackNanos = Long.MIN_VALUE / 2;
+    long aimAlertNanos = Long.MIN_VALUE / 2;
+
     /** Inventory clicks while walking, for InventoryMove. */
     final EventWindow movingClicks = new EventWindow(2);
     /** The last armor piece put on, and quick ones in a row, for AutoArmor. */
@@ -153,5 +160,6 @@ final class PlayerData {
         noFallTicks = 0;
         speed.reset();
         knockback.stop();
+        aim.reset();
     }
 }
